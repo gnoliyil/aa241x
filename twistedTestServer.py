@@ -19,7 +19,7 @@ class TeamProtocol(LineReceiver):
         # self.factory was set by the factory's default buildProtocol
         self.factory.protocols[self] = None
         self.factory.numProtocols += 1
-        self.factory.writeToLog('Connection made. There are currently %d open connections.\n' % (self.factory.numProtocols,))
+        self.factory.writeToLog('Connection made. There are currently %d open connections.' % (self.factory.numProtocols,))
         self.writeToTeam(TEAM_ID_QUERY)
 
 
@@ -33,16 +33,20 @@ class TeamProtocol(LineReceiver):
         # Team Communication Authentication
         elif message.startswith(AUTH):
             team_id = self.processAuthentication(message)
-        elif team_id is None or not self.teams[team_id].isAuthenticated:
+        elif team_id is None or not self.teams[team_id].isLoggedIn:
             self.writeToTeam('You are not authorized to send data yet. Please complete authentication.')
-        else:
-            print('[CLIENT]: ' + message)
+
 
 
     def connectionLost(self, reason):
         self.factory.numProtocols -= 1
-        self.factory.writeToLog('Connection lost. There are currently %d open connections.\n' % (self.factory.numProtocols,))
-        # Clean up team and authentication when connection is lost
+        self.factory.writeToLog('Connection lost. There are currently %d open connections.' % (self.factory.numProtocols,))
+        team_id = self.factory.protocols[self]
+        if team_id is not None:
+            self.factory.teams[team_id].logOut()
+            self.factory.protocols[self] = None
+            self.factory.writeToLog('Team ' + team_id + ' logged out.')
+
 
     def writeToTeam(self, message):
         team_id = self.factory.protocols[self]
@@ -63,19 +67,24 @@ class TeamProtocol(LineReceiver):
                 team_id_try = match[1]
 
                 # Invalid team registration
-                if team_id_try not in self.factory.passwords:
-                    self.writeToTeam('Team does not exist.')
+                if team_id_try not in self.factory.teams:
+                    self.writeToTeam('Team ' + team_id_try + ' is not registered.')
                     self.writeToTeam(TEAM_ID_QUERY)
-                elif team_id_try in self.factory.teams:
-                    self.writeToTeam(str('Team ' + team_id_try + ' already started registration.'))  # TODO: string builder and encoder
+                elif team_id_try in self.factory.teams and self.factory.teams[team_id_try].isLoggedIn():
+                    self.writeToTeam('Team ' + team_id_try + ' is already logged in.')
+                    self.writeToTeam(TEAM_ID_QUERY)
+                elif team_id_try in self.factory.teams and self.factory.teams[team_id_try].hasStartedLogin():
+                    self.writeToTeam('Team ' + team_id_try + ' already started login.')
                     self.writeToTeam(TEAM_ID_QUERY)
 
-                # Valid team registration (not authorize yet), add to database
+
+                # Valid team registration (not authorize yet), set protocol and startedLogin and ask for password
                 else:
                     team_id = team_id_try
                     self.factory.protocols[self] = team_id
-                    self.factory.teams[team_id] = Team(self, team_id)
-                    self.writeToTeam(PASSWORD_QUERY)  # Start password auth
+                    self.factory.teams[team_id].startLogin()
+                    self.factory.teams[team_id].setProtocol(self)
+                    self.writeToTeam(PASSWORD_QUERY)
                     return team_id
 
             else:
@@ -87,15 +96,15 @@ class TeamProtocol(LineReceiver):
 
             # Successful authentication
             if team_id is not None and utils.matchExactString(PASSWORD_QUERY, self.factory.passwords[team_id], message):
-                self.factory.teams[team_id].authenticate()
-                self.writeToTeam('Team ' + team_id + ': You have been authenticated.')
+                self.factory.teams[team_id].approveLogin()
+                self.writeToTeam('Team ' + team_id + ': Success! You are now logged in.')
 
             # Unsuccessful authentication attempt
             else:
                 if team_id is None:
                     self.writeToTeam('Invalid: We need your team ID first.')
                 else:
-                    self.writeToTeam('Wrong password.')  # TODO: be more rigorous in password responses? Not really necessary.
+                    self.writeToTeam('Wrong password.')
                 self.writeToTeam(PASSWORD_QUERY)
 
 
@@ -110,8 +119,9 @@ class MainFactory(ServerFactory):
         self.numProtocols = 0
         self.logName = logName
         self.protocols = {}  # Maps protocol to team_id
-        self.teams = {}  # Maps team_id to Team object
-        self.passwords = {'1': 't1', '2': 't2', '3': 't3'}
+        self.numTeams = 6
+        self.teams = { str(i) : Team(i) for i in range(self.numTeams)}  # Maps team_id to Team object # TODO: initialize this from the start
+        self.passwords = { str(i): 't' + str(i) for i in range(self.numTeams)} # TODO: make a file and load from it.
 
     # Called when factory is initialized (put code other than variable initiation here)
     def startFactory(self):
@@ -126,29 +136,37 @@ class MainFactory(ServerFactory):
             self.sendLine(str('Hi team ' + team_id))
         self.log.close()
 
+    #---------------LOGGING METHODS-------------------------------------------#
+
     def writeToLog(self, message):
         if self.isRrunning:
             print('[SERVER]: ' + message)
-            self.log.write('[SERVER]' + message)
+            self.log.write('[SERVER]' + message + '\n')
 
     def writeToLogFromClient(self, message, team_id):
+        '''HELPER FUNCTION FOR COMMUNICATION: DON'T USE OTHERWISE'''
         if self.isRrunning:
             if team_id is None:
                 print('[UNKNOWN TEAM] ' + message)
-                self.log.write('[UNKNOWN TEAM]' + message)
+                self.log.write('[UNKNOWN TEAM]' + message + '\n')
             else:
                 print('[TEAM ' + team_id + '] ' + message)
-                self.log.write('[TEAM ' + team_id + '] ' + message)
+                self.log.write('[TEAM ' + team_id + '] ' + message + '\n')
 
     def writeToLogToTeam(self, message, team_id):
+        '''HELPER FUNCTION FOR COMMUNICATION: DON'T USE OTHERWISE'''
         if self.isRrunning:
             if team_id is None:
                 print('[SERVER TO UNKNOWN TEAM] ' + message)
-                self.log.write('[SERVER TO UNKNOWN TEAM]' + message)
+                self.log.write('[SERVER TO UNKNOWN TEAM]' + message + '\n')
             else:
                 print('[SERVER TO TEAM ' + team_id + '] ' + message)
-                self.log.write('[SERVER TO TEAM ' + team_id + '] ' + message)
+                self.log.write('[SERVER TO TEAM ' + team_id + '] ' + message + '\n')
 
+    #-------------------------------------------------------------------------#
+
+    def initTeams(self):
+        return
 
 
 # 8007 is the port you want to run under. Choose something >1024

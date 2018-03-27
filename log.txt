@@ -361,3 +361,330 @@ Starting new log: 2018-03-27 14:25:48.499576
 [SERVER TO UNKNOWN TEAM]AUTH TEAM_ID: [UNKNOWN TEAM]AUTH TEAM_ID: 2[SERVER TO TEAM 2] AUTH PASSWORD: [TEAM 2] AUTH PASSWORD: t1[SERVER TO TEAM 2] Wrong password.[SERVER TO TEAM 2] AUTH PASSWORD: [TEAM 2] AUTH PASSWORD: t2[SERVER TO TEAM 2] Team 2: You have been authenticated.[SERVER]Connection made. There are currently 2 open connections.
 [SERVER TO UNKNOWN TEAM]AUTH TEAM_ID: [UNKNOWN TEAM]AUTH TEAM_ID: 2[SERVER TO UNKNOWN TEAM]Team 2 already started registration.[SERVER TO UNKNOWN TEAM]AUTH TEAM_ID: [UNKNOWN TEAM]AUTH TEAM_ID: 1[SERVER TO TEAM 1] AUTH PASSWORD: [TEAM 1] AUTH PASSWORD: t1[SERVER TO TEAM 1] Team 1: You have been authenticated.[SERVER]Connection lost. There are currently 1 open connections.
 
+Starting new log: 2018-03-27 15:02:12.396865
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]AUTH TEAM_ID: [UNKNOWN TEAM]AUTH TEAM_ID: 1[SERVER TO TEAM 1] AUTH PASSWORD: [TEAM 1] AUTH PASSWORD: t1[SERVER TO TEAM 1] Team 1: You have been authenticated.[SERVER]Connection lost. There are currently 0 open connections.
+Starting new log: 2018-03-27 15:02:41.164104
+[SERVER]Connection made. There are currently 1 open connections.[SERVER TO UNKNOWN TEAM]AUTH TEAM_ID: [UNKNOWN TEAM]AUTH TEAM_ID: 2[SERVER TO TEAM 2] AUTH PASSWORD: [TEAM 2] AUTH PASSWORD: t2[SERVER TO TEAM 2] Team 2: You have been authenticated.[SERVER]Connection lost. There are currently 0 open connections.
+Starting new log: 2018-03-27 15:03:36.226542
+[SERVER]Connection made. There are currently 1 open connections.[SERVER TO UNKNOWN TEAM](AUTH) TEAM_ID: [UNKNOWN TEAM](AUTH) TEAM_ID: 1[SERVER TO UNKNOWN TEAM]Wrong format.[SERVER TO UNKNOWN TEAM](AUTH) TEAM_ID: [UNKNOWN TEAM](AUTH) TEAM_ID: 2[SERVER TO UNKNOWN TEAM]Wrong format.[SERVER TO UNKNOWN TEAM](AUTH) TEAM_ID: [SERVER]Connection lost. There are currently 0 open connections.
+Starting new log: 2018-03-27 15:04:25.025650
+[SERVER]Connection made. There are currently 1 open connections.[SERVER TO UNKNOWN TEAM][AUTH] TEAM_ID: [UNKNOWN TEAM][AUTH] TEAM_ID: 1[SERVER TO UNKNOWN TEAM]Wrong format.[SERVER TO UNKNOWN TEAM][AUTH] TEAM_ID: [SERVER]Connection lost. There are currently 0 open connections.
+Starting new log: 2018-03-27 15:04:51.205770
+[SERVER]Connection made. There are currently 1 open connections.[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: [UNKNOWN TEAM]-AUTH- TEAM_ID: 1[SERVER TO TEAM 1] -AUTH- PASSWORD: [TEAM 1] -AUTH- PASSWORD: t1[SERVER TO TEAM 1] Team 1: You have been authenticated.[SERVER]Connection lost. There are currently 0 open connections.[SERVER]Connection made. There are currently 1 open connections.[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: [UNKNOWN TEAM]-AUTH- TEAM_ID: 1[SERVER TO UNKNOWN TEAM]Team 1 already started registration.[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: [SERVER]Connection lost. There are currently 0 open connections.
+Starting new log: 2018-03-27 15:07:38.590140
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 1
+[SERVER TO TEAM 1] -AUTH- PASSWORD: 
+[TEAM 1] -AUTH- PASSWORD: t1
+[SERVER TO TEAM 1] Team 1: You have been authenticated.
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 1
+[SERVER TO UNKNOWN TEAM]Team 1 already started registration.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 2
+[SERVER TO TEAM 2] -AUTH- PASSWORD: 
+[TEAM 2] -AUTH- PASSWORD: t2
+[SERVER TO TEAM 2] Team 2: You have been authenticated.
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 15:08:15.213146
+
+Starting new log: 2018-03-27 18:00:02.030415
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 5
+[SERVER TO UNKNOWN TEAM]Team does not exist.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 1
+[SERVER TO TEAM 1] -AUTH- PASSWORD: 
+[TEAM 1] -AUTH- PASSWORD: t1
+[SERVER TO TEAM 1] Team 1: You have been authenticated.
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 18:03:52.268752
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 1
+[SERVER TO TEAM 1] -AUTH- PASSWORD: 
+[TEAM 1] -AUTH- PASSWORD: 5
+[SERVER TO TEAM 1] Wrong password.
+[SERVER TO TEAM 1] -AUTH- PASSWORD: 
+[TEAM 1] -AUTH- PASSWORD: t3
+[SERVER TO TEAM 1] Wrong password.
+[SERVER TO TEAM 1] -AUTH- PASSWORD: 
+[TEAM 1] -AUTH- PASSWORD: t1
+[SERVER TO TEAM 1] Team 1: You are now logged in.
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 18:10:39.201228
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 7
+[SERVER TO UNKNOWN TEAM]Team 7 is not registered.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: hey man
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 919
+[SERVER TO UNKNOWN TEAM]Team 9 is not registered.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 7
+[SERVER TO UNKNOWN TEAM]Team 7 is not registered.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 6
+[SERVER TO UNKNOWN TEAM]Team 6 is not registered.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 5
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 18:11:56.315688
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO UNKNOWN TEAM]Team 0 already started login.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 1
+[SERVER TO UNKNOWN TEAM]Team 1 already started login.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 2
+[SERVER TO UNKNOWN TEAM]Team 2 already started login.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 1
+[SERVER TO UNKNOWN TEAM]Team 1 already started login.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 1
+[SERVER TO UNKNOWN TEAM]Team 1 already started login.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 18:16:32.516983
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 6
+[SERVER TO UNKNOWN TEAM]Team 6 is not registered.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: -
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: -1
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: 0
+[SERVER TO TEAM 0] Wrong password.
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: t0
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 18:17:12.155761
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: t0
+[SERVER TO TEAM 0] Team 0: You are now logged in.
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 18:22:05.968866
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER]Connection made. There are currently 2 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[SERVER]Connection lost. There are currently 1 open connections.
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 18:26:41.143621
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[SERVER]Connection made. There are currently 2 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[SERVER]Connection lost. There are currently 1 open connections.
+
+Starting new log: 2018-03-27 18:28:06.388787
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 18:28:57.803478
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 18:29:57.676248
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[SERVER]Connection made. There are currently 2 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO UNKNOWN TEAM]Team 0 already started login.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO UNKNOWN TEAM]Team 0 already started login.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO UNKNOWN TEAM]Team 0 already started login.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[TEAM 0] -AUTH- PASSWORD: 
+[SERVER TO TEAM 0] Wrong password.
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[SERVER]Connection lost. There are currently 1 open connections.
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: 
+[SERVER TO TEAM 0] Wrong password.
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: t0
+[SERVER TO TEAM 0] Team 0: Success! You are now logged in.
+[SERVER]Connection made. There are currently 2 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO UNKNOWN TEAM]Team 0 already started login.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER]Connection lost. There are currently 1 open connections.
+
+Starting new log: 2018-03-27 18:31:09.281344
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: ds
+[SERVER TO TEAM 0] Wrong password.
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[SERVER]Connection made. There are currently 2 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO UNKNOWN TEAM]Team 0 already started login.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 1
+[SERVER TO TEAM 1] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: t0
+[SERVER TO TEAM 0] Team 0: Success! You are now logged in.
+[SERVER]Connection lost. There are currently 1 open connections.
+[TEAM 1] -AUTH- PASSWORD: t1
+[SERVER TO TEAM 1] Team 1: Success! You are now logged in.
+[SERVER]Connection made. There are currently 2 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 1
+[SERVER TO UNKNOWN TEAM]Team 1 is already logged in.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: t0
+[SERVER TO TEAM 0] Team 0: Success! You are now logged in.
+[SERVER]Connection lost. There are currently 1 open connections.
+[SERVER]Connection made. There are currently 2 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: t0
+[SERVER TO TEAM 0] Team 0: Success! You are now logged in.
+[SERVER]Connection lost. There are currently 1 open connections.
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 18:36:53.411691
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: t0
+[SERVER TO TEAM 0] Team 0: Success! You are now logged in.
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 18:37:17.724175
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 0
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: t0
+[SERVER TO TEAM 0] Team 0: Success! You are now logged in.
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 0 logged out.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 1
+[SERVER TO TEAM 1] -AUTH- PASSWORD: 
+[TEAM 1] -AUTH- PASSWORD: tq
+[SERVER TO TEAM 1] Wrong password.
+[SERVER TO TEAM 1] -AUTH- PASSWORD: 
+[TEAM 1] -AUTH- PASSWORD: t1
+[SERVER TO TEAM 1] Team 1: Success! You are now logged in.
+
+Starting new log: 2018-03-27 18:41:01.614999
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 1
+[SERVER TO TEAM 1] -AUTH- PASSWORD: 
+[TEAM 1] -AUTH- PASSWORD: t1
+[SERVER TO TEAM 1] Team 1: Success! You are now logged in.
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 1 logged out.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 100
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: 1----
+[SERVER TO TEAM 0] Wrong password.
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: 100
+[SERVER TO TEAM 0] Wrong password.
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: t1
+[SERVER TO TEAM 0] Wrong password.
+[SERVER TO TEAM 0] -AUTH- PASSWORD: 
+[TEAM 0] -AUTH- PASSWORD: t0
+[SERVER TO TEAM 0] Team 0: Success! You are now logged in.
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 0 logged out.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 123
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: t3
+[SERVER TO TEAM 3] Team 3: Success! You are now logged in.
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 123
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+
