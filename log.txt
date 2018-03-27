@@ -1,0 +1,363 @@
+Starting new log: 2018-03-26 16:59:42.998263
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-26 17:06:45.583636
+Connection made. There are currently 1 open connections.
+
+Starting new log: 2018-03-26 17:14:27.014905
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-26 17:22:14.655666
+Connection made. There are currently 1 open connections.
+
+Starting new log: 2018-03-26 17:30:32.828709
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-26 17:33:03.111055
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-26 17:35:15.299039
+Connection made. There are currently 1 open connections.
+
+Starting new log: 2018-03-26 17:38:03.218929
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-26 18:36:26.138437
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection made. There are currently 2 open connections.
+
+Starting new log: 2018-03-26 18:39:48.649015
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-26 18:40:44.476737
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-26 18:41:12.369108
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-26 18:43:10.365301
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-26 18:44:35.674577
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-26 18:59:15.553447
+Connection made. There are currently 1 open connections.
+Connection made. There are currently 2 open connections.
+Connection made. There are currently 3 open connections.
+Connection lost. There are currently 2 open connections.
+Connection lost. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-26 19:00:48.619675
+Connection made. There are currently 1 open connections.
+Connection made. There are currently 2 open connections.
+Connection made. There are currently 3 open connections.
+Connection lost. There are currently 2 open connections.
+Connection lost. There are currently 1 open connections.
+
+Starting new log: 2018-03-26 23:30:35.751925
+Connection made. There are currently 1 open connections.
+Connection made. There are currently 2 open connections.
+Connection lost. There are currently 1 open connections.
+
+Starting new log: 2018-03-26 23:37:18.736341
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+
+Starting new log: 2018-03-27 01:00:53.643816
+Connection made. There are currently 1 open connections.
+
+Starting new log: 2018-03-27 01:01:26.960941
+Connection made. There are currently 1 open connections.
+
+Starting new log: 2018-03-27 01:07:20.370946
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+
+Starting new log: 2018-03-27 01:11:01.866558
+Connection made. There are currently 1 open connections.
+
+Starting new log: 2018-03-27 01:11:53.692938
+Connection made. There are currently 1 open connections.
+
+Starting new log: 2018-03-27 01:13:04.987052
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 01:33:33.477672
+Connection made. There are currently 1 open connections.
+
+Starting new log: 2018-03-27 01:34:11.941178
+Connection made. There are currently 1 open connections.
+
+Starting new log: 2018-03-27 01:34:24.982990
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 01:35:44.294032
+Connection made. There are currently 1 open connections.
+
+Starting new log: 2018-03-27 02:02:54.358076
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 02:04:16.013538
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 02:05:00.109456
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 02:05:17.301111
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 02:06:13.879538
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 11:26:27.491607
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 11:30:15.993667
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 11:32:04.859271
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 11:33:50.682572
+Connection made. There are currently 1 open connections.
+Team 1 authenticatedConnection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 11:38:58.235615
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Team 1 authenticated
+Starting new log: 2018-03-27 12:30:51.900790
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 12:31:35.778684
+Connection made. There are currently 1 open connections.
+Team 1 authenticatedConnection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 12:33:33.248460
+Connection made. There are currently 1 open connections.
+Team 1 authenticatedConnection made. There are currently 2 open connections.
+Team 2 authenticatedConnection made. There are currently 3 open connections.
+Connection lost. There are currently 2 open connections.
+Connection lost. There are currently 1 open connections.
+
+Starting new log: 2018-03-27 12:36:29.361878
+Connection made. There are currently 1 open connections.
+Team 1 authenticatedConnection made. There are currently 2 open connections.
+Connection lost. There are currently 1 open connections.
+
+Starting new log: 2018-03-27 12:37:05.680639
+Connection made. There are currently 1 open connections.
+Team 1 authenticatedConnection made. There are currently 2 open connections.
+Connection lost. There are currently 1 open connections.
+
+Starting new log: 2018-03-27 13:26:54.586845
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:27:10.480343
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:28:02.319059
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:30:29.517094
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:32:51.287279
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:33:43.053256
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:35:53.678151
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:36:40.694206
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:36:58.752300
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:38:59.723925
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:39:53.159619
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:43:35.064321
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:47:03.048252
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:50:55.967065
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:52:21.241895
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:52:57.161775
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:54:44.162656
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 13:55:29.372607
+Connection made. There are currently 1 open connections.
+Connection made. There are currently 2 open connections.
+Connection lost. There are currently 1 open connections.
+Connection made. There are currently 2 open connections.
+Connection lost. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 14:00:12.554699
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 14:00:35.363462
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 14:01:32.232022
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 14:03:20.976911
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 14:03:56.862274
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 14:06:53.369121
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 14:10:25.449227
+Connection made. There are currently 1 open connections.
+Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 14:16:39.345300
+
+Starting new log: 2018-03-27 14:17:07.414519
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER][SERVER TO  UNKNOWN TEAM]: AUTH TEAM_ID: [SERVER][SERVER TO  TEAM 1]: AUTH PASSWORD: [SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 14:23:12.593123
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER][SERVER TO  UNKNOWN TEAM]: AUTH TEAM_ID: [UNKNOWN TEAM]AUTH TEAM_ID: 1[SERVER][SERVER TO  TEAM 1]: AUTH PASSWORD: [SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 14:25:11.635017
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]AUTH TEAM_ID: [UNKNOWN TEAM]AUTH TEAM_ID: 1[SERVER TO TEAM 1]: AUTH PASSWORD: [SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 14:25:48.499576
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]AUTH TEAM_ID: [UNKNOWN TEAM]AUTH TEAM_ID: 2[SERVER TO TEAM 2] AUTH PASSWORD: [TEAM 2] AUTH PASSWORD: t1[SERVER TO TEAM 2] Wrong password.[SERVER TO TEAM 2] AUTH PASSWORD: [TEAM 2] AUTH PASSWORD: t2[SERVER TO TEAM 2] Team 2: You have been authenticated.[SERVER]Connection made. There are currently 2 open connections.
+[SERVER TO UNKNOWN TEAM]AUTH TEAM_ID: [UNKNOWN TEAM]AUTH TEAM_ID: 2[SERVER TO UNKNOWN TEAM]Team 2 already started registration.[SERVER TO UNKNOWN TEAM]AUTH TEAM_ID: [UNKNOWN TEAM]AUTH TEAM_ID: 1[SERVER TO TEAM 1] AUTH PASSWORD: [TEAM 1] AUTH PASSWORD: t1[SERVER TO TEAM 1] Team 1: You have been authenticated.[SERVER]Connection lost. There are currently 1 open connections.
+
