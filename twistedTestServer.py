@@ -6,6 +6,7 @@ from datetime import datetime
 from sys import stdout
 from Team import Team
 from allVars import *
+from serverVars import *
 import utils
 
 
@@ -14,6 +15,8 @@ class TeamProtocol(LineReceiver):
     Potentially useful calls:
     self.transport.loseConnection()
     '''
+
+    #-----------------TWISTED PROTOCOL METHODS--------------------------------#
 
     def connectionMade(self):
         # self.factory was set by the factory's default buildProtocol
@@ -26,16 +29,22 @@ class TeamProtocol(LineReceiver):
     def lineReceived(self, line):
         team_id = self.factory.protocols[self]
         message = line.decode()
-        self.factory.writeToLogFromClient(message, team_id)
-        if message == "write to all":
-            self.sendToAllTeams("hi all")
+        self.factory.writeToLogFromTeam(message, team_id)
 
         # Team Communication Authentication
-        elif message.startswith(AUTH):
+        if message.startswith(AUTH):
             team_id = self.processAuthentication(message)
-        elif team_id is None or not self.teams[team_id].isLoggedIn:
+
+
+        elif team_id is None or not self.factory.teams[team_id].isLoggedIn():
             self.writeToTeam('You are not authorized to send data yet. Please complete authentication.')
 
+        # Team is logged in. Accept data.
+        else:
+            if message.startswith(DRONE_UPDATE):
+                match = utils.matchDroneUpdate(message)
+                if match:
+                    drone_id, longitude, latitude, altitude = match.groups()
 
 
     def connectionLost(self, reason):
@@ -47,20 +56,21 @@ class TeamProtocol(LineReceiver):
             self.factory.protocols[self] = None
             self.factory.writeToLog('Team ' + team_id + ' logged out.')
 
+    #-------------------------------------------------------------------------#
 
     def writeToTeam(self, message):
+        '''
+        Writes to the team assigned to this protocol, and logs the message.
+        '''
         team_id = self.factory.protocols[self]
         self.factory.writeToLogToTeam(message, team_id)
         self.sendLine(message.encode())
 
 
-    def sendToAllTeams(self, message):
-        for team in self.factory.protocols:
-            if team != self:
-                team.transport.write(message.encode())
-
-
     def processAuthentication(self, message):
+        '''
+        Run all logic for authenticating and 'logging in' a user.
+        '''
         if message.startswith(TEAM_ID_QUERY):
             match = utils.matchIntResponse(TEAM_ID_QUERY, message)
             if match:
@@ -97,7 +107,7 @@ class TeamProtocol(LineReceiver):
             # Successful authentication
             if team_id is not None and utils.matchExactString(PASSWORD_QUERY, self.factory.passwords[team_id], message):
                 self.factory.teams[team_id].approveLogin()
-                self.writeToTeam('Team ' + team_id + ': Success! You are now logged in.')
+                self.writeToTeam(AUTH_SUCCESS + 'Team ' + team_id + ': Success! You are now logged in.')
 
             # Unsuccessful authentication attempt
             else:
@@ -111,41 +121,57 @@ class TeamProtocol(LineReceiver):
 
 class MainFactory(ServerFactory):
 
+    def __init__(self):
+        '''
+        Initializes variables:
+            numProtocols: number of open protocols
+            protocols: maps { protocol: team_id }
+            teams: maps { team: Team object }
+            passwords: maps { team_id : password }
+        '''
+        self.numProtocols = 0
+        self.protocols = {}
+        self.teams = { str(i) : Team(i) for i in range(NUM_TEAMS)}  # Maps team_id to Team object.
+        self.passwords = { str(i): 't' + str(i) for i in range(NUM_TEAMS)} # TODO: make a file and load from it.
+
+    #---------------TWISTED FACTORY METHODS----------------------------------#
+
     # This will be used by the default buildProtocol to create new protocols:
     protocol = TeamProtocol
 
-    def __init__(self, logName='log.txt'):
-        self.isRrunning = True
-        self.numProtocols = 0
-        self.logName = logName
-        self.protocols = {}  # Maps protocol to team_id
-        self.numTeams = 6
-        self.teams = { str(i) : Team(i) for i in range(self.numTeams)}  # Maps team_id to Team object # TODO: initialize this from the start
-        self.passwords = { str(i): 't' + str(i) for i in range(self.numTeams)} # TODO: make a file and load from it.
-
     # Called when factory is initialized (put code other than variable initiation here)
     def startFactory(self):
-        self.log = open(self.logName, 'a')
+        '''
+        Called when factory starts running. Sets isRunning to true for logging. Opens files.
+        '''
+        self.isRunning = True
+        self.log = open(LOG_NAME, 'a')
         self.log.write('Starting new log: ' + str(datetime.now()) + '\n')
 
     # Factory shutdown
     def stopFactory(self):
-        self.isRrunning = False
+        '''
+        Called when factory is shutting down. Set isRunning to false so we can log without errors, and closes opened files.
+        '''
+        self.isRunning = False
         self.log.write('\n')
-        for team_id, protocol in self.teams:
-            self.sendLine(str('Hi team ' + team_id))
         self.log.close()
 
     #---------------LOGGING METHODS-------------------------------------------#
 
     def writeToLog(self, message):
-        if self.isRrunning:
-            print('[SERVER]: ' + message)
+        '''
+        Prints message to output and writes message to log.
+        '''
+        if self.isRunning:
+            print('[SERVER] ' + message)
             self.log.write('[SERVER]' + message + '\n')
 
-    def writeToLogFromClient(self, message, team_id):
-        '''HELPER FUNCTION FOR COMMUNICATION: DON'T USE OTHERWISE'''
-        if self.isRrunning:
+    def writeToLogFromTeam(self, message, team_id):
+        '''
+        Prints to output and writes to log a messahe that we received from Team team_id
+        '''
+        if self.isRunning:
             if team_id is None:
                 print('[UNKNOWN TEAM] ' + message)
                 self.log.write('[UNKNOWN TEAM]' + message + '\n')
@@ -154,8 +180,11 @@ class MainFactory(ServerFactory):
                 self.log.write('[TEAM ' + team_id + '] ' + message + '\n')
 
     def writeToLogToTeam(self, message, team_id):
-        '''HELPER FUNCTION FOR COMMUNICATION: DON'T USE OTHERWISE'''
-        if self.isRrunning:
+        '''
+        HELPER FUNCTION FOR COMMUNICATION: DON'T USE OTHERWISE
+        Prints message that we server sends to Team team_id, and also writes that to the log.
+        '''
+        if self.isRunning:
             if team_id is None:
                 print('[SERVER TO UNKNOWN TEAM] ' + message)
                 self.log.write('[SERVER TO UNKNOWN TEAM]' + message + '\n')
@@ -165,11 +194,14 @@ class MainFactory(ServerFactory):
 
     #-------------------------------------------------------------------------#
 
-    def initTeams(self):
-        return
 
 
 # 8007 is the port you want to run under. Choose something >1024
-endpoint = TCP4ServerEndpoint(reactor, 8007)
-endpoint.listen(MainFactory())
-reactor.run()
+def main():
+    endpoint = TCP4ServerEndpoint(reactor, 8007)
+    endpoint.listen(MainFactory())
+    reactor.run()
+
+
+if __name__ == '__main__':
+    main()
