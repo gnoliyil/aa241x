@@ -9,10 +9,10 @@ import utils
 from stateSimulator import Simulator  # TODO: delete when we stop using simulator.
 
 
-class TeamClientProtocol(LineReceiver):
+class TeamClientSideProtocol(LineReceiver):
 
     def __init__(self):
-        self.droneStates = []  # TODO: This is part of the drone not the protocol.
+        self.droneStates = []  # TODO: This is just a placeholder list for simulation purposes. This assumes there is only one drone per team right now.
 
     #---------------TWISTED PROTOCOL METHODS----------------------------------#
 
@@ -76,7 +76,8 @@ class TeamClientProtocol(LineReceiver):
         '''
         if self.droneStates:
             lastState = self.droneStates[-1]
-            self.writeToServer(DRONE_UPDATE  + '0' + utils.stateToString(lastState))  # TODO: update dron architecture
+            drone_id = '0' # TODO; 0 is just a placeholder
+            self.writeToServer(DRONE_UPDATE  + drone_id + utils.stateToString(lastState))  # TODO: update drone architecture
         self.droneStates.clear()
         reactor.callLater(DRONE_UPDATE_INTERVAL, self.sendDroneState)
 
@@ -99,7 +100,7 @@ class TeamFactory(ReconnectingClientFactory):
     #---------------TWISTED FACTORY METHODS----------------------------------#
 
     # Standard for Twisted. This is the protocol that the factory will be initializing.
-    protocol = TeamClientProtocol
+    protocol = TeamClientSideProtocol
 
     def startedConnecting(self, connector):
         '''
@@ -107,12 +108,14 @@ class TeamFactory(ReconnectingClientFactory):
         '''
         print('Trying to connect.')
 
+
     def clientConnectionLost(self, connector, reason):
         '''
         Called when a client (in this case there is only one) loses connection to the server.
         '''
         print('Lost connection.  Reason:', reason)
         ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
+
 
     def clientConnectionFailed(self, connector, reason):
         '''

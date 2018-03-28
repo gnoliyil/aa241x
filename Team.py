@@ -5,7 +5,7 @@ class Team():
     def __init__(self, team_id):
         self.team_id = team_id
         self.protocol = None
-        self.drones = [Drone(team_id, i) for i in range(NUM_DRONES)]
+        self.drones = [Drone(team_id, str(drone_id)) for drone_id in range(NUM_DRONES)]
         self.startedLogin = False
         self.loggedIn = False
 
@@ -28,3 +28,6 @@ class Team():
         self.protocol = None
         self.startedLogin = False
         self.loggedIn = False
+
+    def upateDroneState(self, drone_id, state):
+        self.drones[int(drone_id)].updateState(state)

@@ -8,55 +8,81 @@ from Team import Team
 from allVars import *
 from serverVars import *
 import utils
+from threading import Timer
 
 
-class TeamProtocol(LineReceiver):
-    '''
-    Potentially useful calls:
-    self.transport.loseConnection()
-    '''
+class TeamServerSideProtocol(LineReceiver):
 
     #-----------------TWISTED PROTOCOL METHODS--------------------------------#
 
     def connectionMade(self):
-        # self.factory was set by the factory's default buildProtocol
+        '''
+        Called when a conenction is made with a team for the first time.
+        Update relevant variables and start authentication process.
+        Note: self.factory was set by the factory's default buildProtocol
+        '''
         self.factory.protocols[self] = None
         self.factory.numProtocols += 1
         self.factory.writeToLog('Connection made. There are currently %d open connections.' % (self.factory.numProtocols,))
         self.writeToTeam(TEAM_ID_QUERY)
 
+        # Set timer and password attempts for user authentication
+        self.auth_t = Timer(LOGIN_TIMEOUT, self.denyTeam, args=('Timed out. ', ))
+        self.auth_t.start()
+        self.triesLeft = PASSWORD_TRIES
+
 
     def lineReceived(self, line):
+        '''
+        Called when line/message is received from team. We usually check the start of the line to decide what to do.
+        '''
+
+        # Get message and log it.
         team_id = self.factory.protocols[self]
         message = line.decode()
         self.factory.writeToLogFromTeam(message, team_id)
 
-        # Team Communication Authentication
+        # Team Authentication
         if message.startswith(AUTH):
             team_id = self.processAuthentication(message)
 
-
+        # Team is trying to send a message without our approval.
         elif team_id is None or not self.factory.teams[team_id].isLoggedIn():
             self.writeToTeam('You are not authorized to send data yet. Please complete authentication.')
 
-        # Team is logged in. Accept data.
+        # Team is logged in. We can accept data.
         else:
+
+            # Team is sending drone state information, accept it and store it.
             if message.startswith(DRONE_UPDATE):
                 match = utils.matchDroneUpdate(message)
                 if match:
                     drone_id, longitude, latitude, altitude = match.groups()
+                    state = (longitude, latitude, altitude)
+                    self.factory.teams[team_id].upateDroneState(drone_id, state)
 
 
     def connectionLost(self, reason):
+        '''
+        Called when connection to team is lost. Update relevant variables and clean up data structures so team can log in again.
+        '''
         self.factory.numProtocols -= 1
         self.factory.writeToLog('Connection lost. There are currently %d open connections.' % (self.factory.numProtocols,))
         team_id = self.factory.protocols[self]
+        self.auth_t.cancel()
         if team_id is not None:
             self.factory.teams[team_id].logOut()
             self.factory.protocols[self] = None
             self.factory.writeToLog('Team ' + team_id + ' logged out.')
 
     #-------------------------------------------------------------------------#
+
+    def denyTeam(self, reason):
+        '''
+        Close connection with user for given reason
+        '''
+        self.writeToTeam('Login failed. ' + reason + ' Losing connection.')
+        self.transport.loseConnection()
 
     def writeToTeam(self, message):
         '''
@@ -104,10 +130,11 @@ class TeamProtocol(LineReceiver):
         elif message.startswith(PASSWORD_QUERY):
             team_id = self.factory.protocols[self]
 
-            # Successful authentication
+            # Successful authentication, let team know, stop auth timer thread.
             if team_id is not None and utils.matchExactString(PASSWORD_QUERY, self.factory.passwords[team_id], message):
                 self.factory.teams[team_id].approveLogin()
                 self.writeToTeam(AUTH_SUCCESS + 'Team ' + team_id + ': Success! You are now logged in.')
+                self.auth_t.cancel()
 
             # Unsuccessful authentication attempt
             else:
@@ -115,6 +142,10 @@ class TeamProtocol(LineReceiver):
                     self.writeToTeam('Invalid: We need your team ID first.')
                 else:
                     self.writeToTeam('Wrong password.')
+                    self.triesLeft -= 1
+                    if self.triesLeft == 0:
+                        self.denyTeam('Too many password attempts.')
+                        return
                 self.writeToTeam(PASSWORD_QUERY)
 
 
@@ -131,13 +162,13 @@ class MainFactory(ServerFactory):
         '''
         self.numProtocols = 0
         self.protocols = {}
-        self.teams = { str(i) : Team(i) for i in range(NUM_TEAMS)}  # Maps team_id to Team object.
+        self.teams = { str(i) : Team(str(i)) for i in range(NUM_TEAMS)}  # Maps team_id to Team object.
         self.passwords = { str(i): 't' + str(i) for i in range(NUM_TEAMS)} # TODO: make a file and load from it.
 
     #---------------TWISTED FACTORY METHODS----------------------------------#
 
     # This will be used by the default buildProtocol to create new protocols:
-    protocol = TeamProtocol
+    protocol = TeamServerSideProtocol
 
     # Called when factory is initialized (put code other than variable initiation here)
     def startFactory(self):
@@ -169,7 +200,7 @@ class MainFactory(ServerFactory):
 
     def writeToLogFromTeam(self, message, team_id):
         '''
-        Prints to output and writes to log a messahe that we received from Team team_id
+        Prints to output and writes to log a message that we received from Team team_id
         '''
         if self.isRunning:
             if team_id is None:

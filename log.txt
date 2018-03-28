@@ -1560,3 +1560,326 @@ Starting new log: 2018-03-27 23:06:03.874928
 [SERVER]Connection lost. There are currently 0 open connections.
 [SERVER]Team 0 logged out.
 
+Starting new log: 2018-03-27 23:25:01.850776
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Login failed. Timed out.  Losing connection.
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 4
+[SERVER TO TEAM 4] -AUTH- PASSWORD: 
+[SERVER TO TEAM 4] Login failed. Timed out.  Losing connection.
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 4 logged out.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 4
+[SERVER TO TEAM 4] -AUTH- PASSWORD: 
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 4 logged out.
+[SERVER TO UNKNOWN TEAM]Login failed. Timed out.  Losing connection.
+
+Starting new log: 2018-03-27 23:28:29.553171
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: f
+[SERVER TO TEAM 3] Wrong password.
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: f
+[SERVER TO TEAM 3] Wrong password.
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: f
+[SERVER TO TEAM 3] Wrong password.
+[SERVER TO TEAM 3] Login failed. Too many password attempts Losing connection.
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Login failed. Timed out.  Losing connection.
+[SERVER TO UNKNOWN TEAM]Login failed. Timed out.  Losing connection.
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 23:29:31.604760
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: f
+[SERVER TO TEAM 3] Wrong password.
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: f
+[SERVER TO TEAM 3] Wrong password.
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: f
+[SERVER TO TEAM 3] Wrong password.
+[SERVER TO TEAM 3] Login failed. Too many password attempts Losing connection.
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+[SERVER TO UNKNOWN TEAM]Login failed. Timed out.  Losing connection.
+
+Starting new log: 2018-03-27 23:30:03.292418
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: d
+[SERVER TO TEAM 3] Wrong password.
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: d
+[SERVER TO TEAM 3] Wrong password.
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: d
+[SERVER TO TEAM 3] Wrong password.
+[SERVER TO TEAM 3] Login failed. Too many password attempts Losing connection.
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+[SERVER TO UNKNOWN TEAM]Login failed. Timed out.  Losing connection.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 4
+[SERVER TO TEAM 4] -AUTH- PASSWORD: 
+[SERVER TO TEAM 4] Login failed. Timed out.  Losing connection.
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 4 logged out.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: 
+[SERVER TO TEAM 3] Wrong password.
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: 
+[SERVER TO TEAM 3] Wrong password.
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[SERVER TO TEAM 3] Login failed. Timed out.  Losing connection.
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 23:38:00.138199
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Login failed. Timed out.  Losing connection.
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: fgf
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 6
+[SERVER TO UNKNOWN TEAM]Team 6 is not registered.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: t3
+[SERVER TO TEAM 3] AUTH SUCCESS: Team 3: Success! You are now logged in.
+[TEAM 3] DRONE_UPDATE: 0 0.1 0.2 0.3
+[TEAM 3] DRONE_UPDATE: 0 2.1 4.2 6.3
+[SERVER TO TEAM 3] Login failed. Timed out.  Losing connection.
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: 6
+[SERVER TO TEAM 3] Wrong password.
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[SERVER TO TEAM 3] Login failed. Timed out.  Losing connection.
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: t3
+[SERVER TO TEAM 3] AUTH SUCCESS: Team 3: Success! You are now logged in.
+[TEAM 3] DRONE_UPDATE: 0 0.1 0.2 0.3
+[TEAM 3] DRONE_UPDATE: 0 2.1 4.2 6.3
+[SERVER]Connection made. There are currently 2 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO UNKNOWN TEAM]Team 3 is already logged in.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[TEAM 3] DRONE_UPDATE: 0 5.1 10.2 15.3
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 4
+[SERVER TO TEAM 4] -AUTH- PASSWORD: 
+[TEAM 3] DRONE_UPDATE: 0 8.1 16.2 24.3
+[TEAM 4] -AUTH- PASSWORD: t4
+[SERVER TO TEAM 4] AUTH SUCCESS: Team 4: Success! You are now logged in.
+[TEAM 4] DRONE_UPDATE: 0 0.1 0.2 0.3
+[TEAM 3] DRONE_UPDATE: 0 11.1 22.2 33.3
+[TEAM 4] DRONE_UPDATE: 0 2.1 4.2 6.3
+[SERVER TO TEAM 3] Login failed. Timed out.  Losing connection.
+[SERVER]Connection lost. There are currently 1 open connections.
+[SERVER]Team 3 logged out.
+[TEAM 4] DRONE_UPDATE: 0 5.1 10.2 15.3
+[SERVER]Connection made. There are currently 2 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[TEAM 4] DRONE_UPDATE: 0 8.1 16.2 24.3
+[SERVER TO TEAM 4] Login failed. Timed out.  Losing connection.
+[SERVER]Connection lost. There are currently 1 open connections.
+[SERVER]Team 4 logged out.
+[SERVER]Connection made. There are currently 2 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Login failed. Timed out.  Losing connection.
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Wrong format.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER]Connection lost. There are currently 1 open connections.
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 23:43:24.445877
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 23:43:32.700824
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Login failed. Timed out.  Losing connection.
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: t3
+[SERVER TO TEAM 3] AUTH SUCCESS: Team 3: Success! You are now logged in.
+[TEAM 3] DRONE_UPDATE: 0 0.1 0.2 0.3
+[TEAM 3] DRONE_UPDATE: 0 2.1 4.2 6.3
+[TEAM 3] DRONE_UPDATE: 0 5.1 10.2 15.3
+[TEAM 3] DRONE_UPDATE: 0 8.1 16.2 24.3
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+
+Starting new log: 2018-03-27 23:56:31.652284
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: t3
+[SERVER TO TEAM 3] AUTH SUCCESS: Team 3: Success! You are now logged in.
+[TEAM 3] DRONE_UPDATE: 0 0.1 0.2 0.3
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 23:58:23.540819
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: t3
+[SERVER TO TEAM 3] AUTH SUCCESS: Team 3: Success! You are now logged in.
+[TEAM 3] DRONE_UPDATE: 0 0.1 0.2 0.3
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 23:59:13.783010
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: t3
+[SERVER TO TEAM 3] AUTH SUCCESS: Team 3: Success! You are now logged in.
+[TEAM 3] DRONE_UPDATE: 0 0.1 0.2 0.3
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER]Connection lost. There are currently 0 open connections.
+
+Starting new log: 2018-03-27 23:59:32.968856
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: t
+[SERVER TO TEAM 3] Wrong password.
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: t3
+[SERVER TO TEAM 3] AUTH SUCCESS: Team 3: Success! You are now logged in.
+[TEAM 3] DRONE_UPDATE: 0 0.1 0.2 0.3
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[SERVER TO UNKNOWN TEAM]Login failed. Timed out.  Losing connection.
+
+Starting new log: 2018-03-28 00:01:29.378803
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: t3
+[SERVER TO TEAM 3] AUTH SUCCESS: Team 3: Success! You are now logged in.
+[TEAM 3] DRONE_UPDATE: 0 0.1 0.2 0.3
+[TEAM 3] DRONE_UPDATE: 0 2.1 4.2 6.3
+[TEAM 3] DRONE_UPDATE: 0 5.1 10.2 15.3
+[TEAM 3] DRONE_UPDATE: 0 8.1 16.2 24.3
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+
+Starting new log: 2018-03-28 00:02:49.242322
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 4
+[SERVER TO TEAM 4] -AUTH- PASSWORD: 
+[TEAM 4] -AUTH- PASSWORD: t4
+[SERVER TO TEAM 4] AUTH SUCCESS: Team 4: Success! You are now logged in.
+[TEAM 4] DRONE_UPDATE: 0 0.1 0.2 0.3
+[TEAM 4] DRONE_UPDATE: 0 2.1 4.2 6.3
+[TEAM 4] DRONE_UPDATE: 0 5.1 10.2 15.3
+[TEAM 4] DRONE_UPDATE: 0 8.1 16.2 24.3
+[TEAM 4] DRONE_UPDATE: 0 11.1 22.2 33.3
+[TEAM 4] DRONE_UPDATE: 0 14.1 28.2 42.3
+[TEAM 4] DRONE_UPDATE: 0 17.1 34.2 51.3
+[TEAM 4] DRONE_UPDATE: 0 19.1 38.2 57.3
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 4 logged out.
+
+Starting new log: 2018-03-28 12:22:48.470292
+[SERVER]Connection made. There are currently 1 open connections.
+[SERVER TO UNKNOWN TEAM]-AUTH- TEAM_ID: 
+[UNKNOWN TEAM]-AUTH- TEAM_ID: 3
+[SERVER TO TEAM 3] -AUTH- PASSWORD: 
+[TEAM 3] -AUTH- PASSWORD: t3
+[SERVER TO TEAM 3] AUTH SUCCESS: Team 3: Success! You are now logged in.
+[TEAM 3] DRONE_UPDATE: 0 0.1 0.2 0.3
+[TEAM 3] DRONE_UPDATE: 0 2.1 4.2 6.3
+[TEAM 3] DRONE_UPDATE: 0 5.1 10.2 15.3
+[TEAM 3] DRONE_UPDATE: 0 8.1 16.2 24.3
+[TEAM 3] DRONE_UPDATE: 0 11.1 22.2 33.3
+[TEAM 3] DRONE_UPDATE: 0 14.1 28.2 42.3
+[TEAM 3] DRONE_UPDATE: 0 17.1 34.2 51.3
+[TEAM 3] DRONE_UPDATE: 0 19.1 38.2 57.3
+[SERVER]Connection lost. There are currently 0 open connections.
+[SERVER]Team 3 logged out.
+
