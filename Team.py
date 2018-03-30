@@ -6,17 +6,10 @@ class Team():
         self.team_id = team_id
         self.protocol = None
         self.drones = [Drone(team_id, str(drone_id)) for drone_id in range(NUM_DRONES)]
-        self.startedLogin = False
         self.loggedIn = False
 
     def setProtocol(self, protocol):
         self.protocol = protocol
-
-    def startLogin(self):
-        self.startedLogin = True
-
-    def hasStartedLogin(self):
-        return self.startedLogin
 
     def approveLogin(self):
         self.loggedIn = True
@@ -26,8 +19,7 @@ class Team():
 
     def logOut(self):
         self.protocol = None
-        self.startedLogin = False
         self.loggedIn = False
 
-    def upateDroneState(self, drone_id, state):
-        self.drones[int(drone_id)].updateState(state)
+    def upateDroneState(self, drone_id, state, timestamp):
+        self.drones[int(drone_id)].updateState(state, timestamp)
