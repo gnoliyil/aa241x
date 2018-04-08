@@ -1,12 +1,12 @@
-DROP TABLE IF EXISTS Bids;
-DROP TABLE IF EXISTS Drone_States;
-DROP TABLE IF EXISTS Ports;
-DROP TABLE IF EXISTS Requests;
-DROP TABLE IF EXISTS Request_States;
-DROP TABLE IF EXISTS Fly_States;
-DROP TABLE IF EXISTS Drones;
-DROP TABLE IF EXISTS Students;
-DROP TABLE IF EXISTS Teams;
+DROP TABLE IF EXISTS Bids CASCADE;
+DROP TABLE IF EXISTS Drone_States CASCADE;
+DROP TABLE IF EXISTS Ports CASCADE;
+DROP TABLE IF EXISTS Requests CASCADE;
+DROP TABLE IF EXISTS Request_States CASCADE;
+DROP TABLE IF EXISTS Fly_States CASCADE;
+DROP TABLE IF EXISTS Drones CASCADE;
+DROP TABLE IF EXISTS Students CASCADE;
+DROP TABLE IF EXISTS Teams CASCADE;
 
 
 CREATE TABLE Teams(
@@ -41,15 +41,6 @@ CREATE TABLE Request_States(
   description TEXT
 );
 
-CREATE TABLE Requests(
-  request_id VARCHAR(255) PRIMARY KEY,
-  time_requested TEXT,
-  time_assigned TEXT,
-  time_completed TEXT,
-  price_f_slope FLOAT,
-  state VARCHAR(255) REFERENCES Request_States(state)
-);
-
 CREATE TABLE Ports(
   port_id VARCHAR(255) PRIMARY KEY,
   latitude VARCHAR(255),
@@ -57,11 +48,27 @@ CREATE TABLE Ports(
   altitude VARCHAR(255)
 );
 
+CREATE TABLE Requests(
+  request_id VARCHAR(255) PRIMARY KEY,
+  k_passengers INTEGER,
+  time_requested TIMESTAMP,
+  time_assigned TIMESTAMP,
+  time_completed TIMESTAMP,
+  time_expected TIMESTAMP,
+  price_expected FLOAT,
+  price_f_slope FLOAT,
+  call_id INTEGER,
+  state VARCHAR(255) REFERENCES Request_States(state),
+  from_port VARCHAR(255) REFERENCES Ports(port_id),
+  to_port VARCHAR(255) REFERENCES Ports(port_id),
+  CONSTRAINT k_passengers_check CHECK (k_passengers >= 0 AND k_passengers <= 4)
+);
+
 -- TODO: Consider using PostGIS for spatial data. --
 CREATE TABLE Drone_States(
   team_id VARCHAR(255),
   drone_id VARCHAR(255),
-  time_stamp TEXT,
+  time_stamp TIMESTAMP,
   battery_left FLOAT,
   k_passengers INTEGER,
   latitude VARCHAR(255),
@@ -77,8 +84,10 @@ CREATE TABLE Drone_States(
 );
 
 CREATE TABLE Bids(
-  bid_id VARCHAR(255),
+  bid_id VARCHAR(255) PRIMARY KEY,
   price FLOAT,
-  succeeded BOOLEAN
-  CONSTRAINT price_check CHECK (price >= 0)
+  succeeded BOOLEAN,
+  request_id VARCHAR(255),
+  CONSTRAINT price_check CHECK (price >= 0),
+  FOREIGN KEY (request_id) REFERENCES Requests(request_id)
 );
