@@ -17,12 +17,6 @@ class DBHandler:
         except pg.Error as e:
             # Perhaps I shouldn't except this error
             print('Failed to establish connection to the database. ERROR:', e)
-        # return self
-        # uncomment line above to enable using handler in the following manner:
-        # with db_handler.Handler(...) as handler:
-        # otherwise the handler should be used as follows:
-        # handler = db_handler.Handler(...)
-        # with handler:
 
     def __exit__(self, *exc):
         self.con.commit() # This saves all changes made during the current context
@@ -66,5 +60,29 @@ class DBHandler:
                 return self.cur.fetchall()
         except pg.Error as e:
             print('Query failed. Rolling back connection. ERROR:', e)
+            # resets cursor, otherwise any future executes will generate an InternalError
+            self.con.rollback()
+
+    def insert_values(self, table, values_tuple):
+        '''Insert values into table.
+        values_format must be a the format in which the values are written.
+        values_tuple must be a tuple of all values, matching the table type.'''
+        assert(self.cursor_is_active())
+
+        values_format = ''
+        num_values = len(values_tuple)
+        for i in range(num_values):
+            values_format += '%s'
+            if i < num_values - 1: values_format += ', '
+
+        sql = 'INSERT INTO {} VALUES({});'.format(table, values_format)
+
+        try:
+            self.cur.execute(sql, values_tuple)
+            self.con.commit()
+            if self.cur.description:
+                return self.cur.fetchall()
+        except pg.Error as e:
+            print('Failed to insert values into {}. Rolling back connection. ERROR:'.format(table), e)
             # resets cursor, otherwise any future executes will generate an InternalError
             self.con.rollback()
