@@ -1,59 +1,66 @@
 from twisted.internet import reactor, defer
-from twisted.protocols.basic import LineReceiver
+from twisted.protocols.basic import LineReceiver, NetstringReceiver
 from twisted.internet.protocol import Protocol, ReconnectingClientFactory, ProcessProtocol
 from sys import stdout
 import threading
 from allVars import *
+from clientVars import *
 import utils
+import datetime
+import json
 
 from stateSimulator import Simulator  # TODO: delete when we stop using simulator.
 
 
-class TeamClientSideProtocol(LineReceiver):
+class TeamClientSideProtocol(NetstringReceiver):
 
     def __init__(self):
+        self.clientState = 'INIT'
         self.droneStates = []  # TODO: This is just a placeholder list for simulation purposes. This assumes there is only one drone per team right now.
 
     #---------------TWISTED PROTOCOL METHODS----------------------------------#
 
-    def lineReceived(self, line):
+    def stringReceived(self, line):
         '''
         Called when we receive a line/message from the main server.
         '''
-        message = line.decode()
-        if message.startswith(AUTH):
-            self.respondTo(message)
-        elif message.startswith(AUTH_SUCCESS):
-            print('Starting drone simulation')
-            self.startSimulation()
-            self.sendDroneState()
+        message = json.loads(line.decode())
+
+        if message['type'] == 'response':
+            if self.clientState == 'LOGGING-IN':
+                if message['result'] == 'success':
+                    self.clientState = 'LOGGED-IN'
+                    self.startSimulation()
+                    self.sendDroneState()
+                else:
+                    self.connectionLost()
+            else:
+                print('[SERVER] ', message)
         else:
-            print('[SERVER] ' + message)
+            print('[SERVER] ', message)
 
     def connectionMade(self):
         '''
         Called when a connection with the main server has been established.
         '''
         print('Connection with SERVER established.')
-
+        # TODO: change to config file later
+        team_id, password = CLIENT_USERNAME, CLIENT_PASSWORD
+        self.writeToServer({
+            'type': 'auth',
+            'team-id': team_id,
+            'password': password
+        })
+        self.clientState = 'LOGGING-IN'
 
     #---------------COMMUNICATION METHODS-------------------------------------#
-
-
-    # TODO: Try to figure out how to get async user input to be able to communicate of protocol.
-    def respondTo(self, message):
-        '''
-        Respond to main server with user input, and with the same template that we receive.
-        '''
-        response = input(message)
-        self.writeToServer(message + response)
 
     def writeToServer(self, message):
         '''
         Write message to main server.
         '''
-        print('[TO SERVER] ' + message)
-        self.sendLine(message.encode())
+        print('[TO SERVER] ', message)
+        self.sendString(json.dumps(message).encode())
 
     #-------------------------------------------------------------------------#
 
@@ -77,11 +84,22 @@ class TeamClientSideProtocol(LineReceiver):
         if self.droneStates:
             lastState = self.droneStates[-1]
             drone_id = '0' # TODO; 0 is just a placeholder
-            self.writeToServer(DRONE_UPDATE  + drone_id + utils.stateToString(lastState))  # TODO: update drone architecture
-        self.droneStates.clear()
+            self.writeToServer({
+                'type': 'drone-state',
+                'timestamp': datetime.datetime.now().timestamp(),
+                'states': [{
+                    'drone_id': 0,
+                    'type'    : lastState['type'],
+                    'longitude': lastState['longitude'],
+                    'latitude': lastState['latitude'],
+                    'altitude': lastState['altitude'],
+                    'velocity': lastState['velocity'],
+                    'pax'     : lastState['pax'],
+                    'drone-state': lastState['drone-state']
+                }]
+            })
+            self.droneStates.clear()
         reactor.callLater(DRONE_UPDATE_INTERVAL, self.sendDroneState)
-
-
 
 
 
