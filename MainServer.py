@@ -10,6 +10,7 @@ from serverVars import *
 import utils
 import json
 from threading import Timer
+from db import DBHandler
 
 
 class TeamServerSideProtocol(NetstringReceiver):
@@ -22,6 +23,8 @@ class TeamServerSideProtocol(NetstringReceiver):
         Update relevant variables and start authentication process.
         Note: self.factory was set by the factory's default buildProtocol
         '''
+        self.db = self.factory.db
+
         self.factory.protocols[self] = None
         self.factory.numProtocols += 1
         self.factory.writeToLog('Connection made. There are currently %d open connections.' % (self.factory.numProtocols,))
@@ -66,7 +69,7 @@ class TeamServerSideProtocol(NetstringReceiver):
                     drone_id = state['drone_id']
                     self.factory.teams[team_id].upateDroneState(drone_id, state, timestamp)
             elif message['type'] == 'logout':
-                self.factory.teams[team_id].logOut()
+                self.logOutTeam()
                 self.writeToTeam({
                     'type': 'response',
                     'result': 'success'
@@ -82,11 +85,10 @@ class TeamServerSideProtocol(NetstringReceiver):
         '''
         self.factory.numProtocols -= 1
         self.factory.writeToLog('Connection lost. There are currently %d open connections.' % (self.factory.numProtocols,))
-        team_id = self.factory.protocols[self]
         self.auth_t.cancel()
-        if team_id is not None:
-            self.factory.teams[team_id].logOut()
-            self.factory.protocols[self] = None
+
+        team_id = self.factory.protocols[self]
+        if self.logOutTeam():
             self.factory.writeToLog('Team ' + team_id + ' logged out.')
 
     #-------------------------------------------------------------------------#
@@ -111,18 +113,35 @@ class TeamServerSideProtocol(NetstringReceiver):
         self.factory.writeToLogToTeam(json.dumps(message), team_id)
         self.sendString(json.dumps(message).encode())
 
+    def logOutTeam(self):
+        team_id = self.factory.protocols[self]
+        if team_id is not None:
+            self.factory.teams[team_id].logOut()
+            self.factory.protocols[self] = None
+            with self.db:
+                self.db.query_list('UPDATE Teams SET is_logged_in = FALSE WHERE team_id = %s;', (team_id, ))
+            return True
+        else:
+            return False
+
     def processAuthentication(self, message):
         '''
         Run all logic for authenticating and 'logging in' a user.
         '''
         team_id, password = message["team-id"], message["password"]
-        if self.factory.teams[team_id].isLoggedIn():
+        if team_id not in self.factory.teams:
+            self.writeToTeam({
+                'type': 'response',
+                'result': 'error',
+                'msg': 'Team {} not found'.format(team_id)
+            })
+        elif self.factory.teams[team_id].isLoggedIn():
             self.writeToTeam({
                 'type'  : 'response',
                 'result': 'error',
                 'msg'   : 'Team ' + team_id + ' is already logged in.'
             })
-        elif password != self.factory.passwords[team_id]:
+        elif not self.factory.teams[team_id].tryLogin(password):
             self.writeToTeam({
                 'type': 'response',
                 'result': 'error',
@@ -132,7 +151,6 @@ class TeamServerSideProtocol(NetstringReceiver):
             if self.triesLeft == 0:
                 self.denyTeam('Too many password attempts.')
         else:
-            self.factory.teams[team_id].approveLogin()
             self.factory.protocols[self] = team_id
             self.writeToTeam({
                 'type': 'response',
@@ -151,10 +169,16 @@ class MainFactory(ServerFactory):
             teams: maps { team: Team object }
             passwords: maps { team_id : password }
         '''
+        self.db = DBHandler(DB_NAME, DB_USER, DB_PASSWORD)
         self.numProtocols = 0
         self.protocols = {}
-        self.teams = { str(i) : Team(str(i)) for i in range(NUM_TEAMS)}  # Maps team_id to Team object.
-        self.passwords = { str(i): 't' + str(i) for i in range(NUM_TEAMS)} # TODO: make a file and load from it.
+        self._loadTeam()
+
+    def _loadTeam(self):
+        with self.db:
+            teams = self.db.query_list('SELECT * FROM Teams;')
+            self.db.query_list('UPDATE Teams SET is_logged_in = FALSE;') # reset all login states
+        self.teams = { team['team_id'] : Team(team['team_id'], team['password']) for team in teams}
 
     #---------------TWISTED FACTORY METHODS----------------------------------#
 
