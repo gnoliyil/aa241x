@@ -1,5 +1,6 @@
 import psycopg2 as pg
 from psycopg2.sql import SQL, Identifier
+from psycopg2.extras import DictCursor
 
 class DBHandler:
 
@@ -13,7 +14,7 @@ class DBHandler:
     def __enter__(self):
         try:
             self.con = pg.connect(dbname=self.db_name, user=self.user, password=self.password, host=self.host)  # will possibly need to include host = 'localhost'
-            self.cur = self.con.cursor()
+            self.cur = self.con.cursor(cursor_factory=DictCursor)
         except pg.Error as e:
             # Perhaps I shouldn't except this error
             print('Failed to establish connection to the database. ERROR:', e)
