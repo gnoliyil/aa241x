@@ -3,7 +3,7 @@ from psycopg2 import sql
 
 
 def main():
-    handler = DBHandler('aa241x', 'postgres', 'aa241x')
+    handler = DBHandler('aa241x_test', 'lfvarela')
     with handler:
         handler.insert_values('Teams', ('Team 2', True, 't2_password'))
         print(handler.query_list('SELECT * FROM Teams;'))
@@ -15,4 +15,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

@@ -7,6 +7,7 @@ from sys import stdout
 from Team import Team
 from allVars import *
 from serverVars import *
+from keys import *
 import utils
 import json
 from threading import Timer
