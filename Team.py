@@ -9,12 +9,10 @@ class Team():
         self.drones = [Drone(team_id, str(drone_id)) for drone_id in range(NUM_DRONES)]
         self.loggedIn = False
 
-    def setProtocol(self, protocol):
-        self.protocol = protocol
-
-    def tryLogin(self, password):
+    def tryLogin(self, password, protocol):
         if password == self.password:
             self.loggedIn = True
+            self.protocol = protocol
             return True
         else:
             return False

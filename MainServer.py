@@ -30,11 +30,6 @@ class TeamServerSideProtocol(NetstringReceiver):
         self.factory.numProtocols += 1
         self.factory.writeToLog('Connection made. There are currently %d open connections.' % (self.factory.numProtocols,))
 
-        # Set timer and password attempts for user authentication
-        self.auth_t = Timer(LOGIN_TIMEOUT, self.denyTeam, args=('Timed out. ', ))
-        self.auth_t.start()
-        self.triesLeft = PASSWORD_TRIES
-
 
     def stringReceived(self, line):
         '''
@@ -64,33 +59,42 @@ class TeamServerSideProtocol(NetstringReceiver):
         # Team is logged in. We can accept data.
         else:
             # Team is sending drone state information, accept it and store it.
+            # TODO: try-catch if info is formatted wrongfully or incomplete
             if message['type'] == 'drone-state':
                 timestamp = message['timestamp']
                 for state in message['states']:
                     drone_id = state['drone_id']
                     self.factory.teams[team_id].upateDroneState(drone_id, state, timestamp)
+                self.writeToTeam({
+                    'type': 'response',
+                    'result': 'success'
+                })
             elif message['type'] == 'logout':
-                self.logOutTeam()
+                self.factory.logOutTeam()
                 self.writeToTeam({
                     'type': 'response',
                     'result': 'success'
                 })
             elif message['type'] == 'bid-response':
+                # TODO: implement
                 pass
             elif message['type'] == 'task-response':
+                # TODO: implement
                 pass
 
     def connectionLost(self, reason):
         '''
         Called when connection to team is lost. Update relevant variables and clean up data structures so team can log in again.
         '''
+        # Log out team.
+        team_id = self.factory.protocols[self]
+        self.factory.logOutTeam(self, team_id)
+
+        # Lower number of protocols.
         self.factory.numProtocols -= 1
         self.factory.writeToLog('Connection lost. There are currently %d open connections.' % (self.factory.numProtocols,))
-        self.auth_t.cancel()
+        self.factory.protocols[self] = None
 
-        team_id = self.factory.protocols[self]
-        if self.logOutTeam():
-            self.factory.writeToLog('Team ' + team_id + ' logged out.')
 
     #-------------------------------------------------------------------------#
 
@@ -114,50 +118,26 @@ class TeamServerSideProtocol(NetstringReceiver):
         self.factory.writeToLogToTeam(json.dumps(message), team_id)
         self.sendString(json.dumps(message).encode())
 
-    def logOutTeam(self):
-        team_id = self.factory.protocols[self]
-        if team_id is not None:
-            self.factory.teams[team_id].logOut()
-            self.factory.protocols[self] = None
-            with self.db:
-                self.db.query_list('UPDATE Teams SET is_logged_in = FALSE WHERE team_id = %s;', (team_id, ))
-            return True
-        else:
-            return False
-
     def processAuthentication(self, message):
         '''
         Run all logic for authenticating and 'logging in' a user.
         '''
         team_id, password = message["team-id"], message["password"]
         if team_id not in self.factory.teams:
-            self.writeToTeam({
-                'type': 'response',
-                'result': 'error',
-                'msg': 'Team {} not found'.format(team_id)
-            })
+            self.denyTeam('Team {} not found'.format(team_id))
+
         elif self.factory.teams[team_id].isLoggedIn():
-            self.writeToTeam({
-                'type'  : 'response',
-                'result': 'error',
-                'msg'   : 'Team ' + team_id + ' is already logged in.'
-            })
-        elif not self.factory.teams[team_id].tryLogin(password):
-            self.writeToTeam({
-                'type': 'response',
-                'result': 'error',
-                'msg': 'Password error'
-            })
-            self.triesLeft -= 1
-            if self.triesLeft == 0:
-                self.denyTeam('Too many password attempts.')
+            self.denyTeam('Team ' + team_id + ' is already logged in.')
+
+        elif not self.factory.teams[team_id].tryLogin(password, self):
+            self.denyTeam('Password error.')
+
         else:
             self.factory.protocols[self] = team_id
             self.writeToTeam({
                 'type': 'response',
                 'result': 'success'
             })
-            self.auth_t.cancel()
 
 
 class MainFactory(ServerFactory):
@@ -173,9 +153,9 @@ class MainFactory(ServerFactory):
         self.db = DBHandler(DB_NAME, DB_USER, DB_PASSWORD)
         self.numProtocols = 0
         self.protocols = {}
-        self._loadTeam()
+        self._loadTeams()
 
-    def _loadTeam(self):
+    def _loadTeams(self):
         with self.db:
             teams = self.db.query_list('SELECT * FROM Teams;')
             self.db.query_list('UPDATE Teams SET is_logged_in = FALSE;') # reset all login states
@@ -239,7 +219,19 @@ class MainFactory(ServerFactory):
                 print('[SERVER TO TEAM ' + team_id + '] ' + message)
                 self.log.write('[SERVER TO TEAM ' + team_id + '] ' + message + '\n')
 
+    def logOutTeam(self, protocol, team_id):
+        if team_id is not None:
+            self.teams[team_id].logOut()
+            with self.db:
+                self.db.query_list('UPDATE Teams SET is_logged_in = FALSE WHERE team_id = %s;', (team_id, ))
+            self.writeToLog('Team ' + team_id + ' logged out.')
+
+
     #-------------------------------------------------------------------------#
+
+    def broadcastBids(self):
+        # TODO: Implement.
+        pass
 
 
 

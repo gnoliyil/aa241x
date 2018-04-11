@@ -25,6 +25,7 @@ class TeamClientSideProtocol(NetstringReceiver):
         Called when we receive a line/message from the main server.
         '''
         message = json.loads(line.decode())
+        print('[SERVER] ', message)
 
         if message['type'] == 'response':
             if self.clientState == 'LOGGING-IN':
@@ -34,10 +35,7 @@ class TeamClientSideProtocol(NetstringReceiver):
                     self.sendDroneState()
                 else:
                     self.connectionLost()
-            else:
-                print('[SERVER] ', message)
-        else:
-            print('[SERVER] ', message)
+
 
     def connectionMade(self):
         '''
