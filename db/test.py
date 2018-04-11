@@ -3,7 +3,7 @@ from psycopg2 import sql
 
 
 def main():
-    handler = DBHandler('aa241x_test', 'lfvarela')
+    handler = DBHandler(DB_NAME, DB_USER, DB_PASSWORD)
     with handler:
         handler.insert_values('Teams', ('Team 2', True, 't2_password'))
         print(handler.query_list('SELECT * FROM Teams;'))
