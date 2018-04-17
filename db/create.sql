@@ -87,7 +87,9 @@ CREATE TABLE Bids(
   bid_id VARCHAR(255) PRIMARY KEY,
   price FLOAT,
   succeeded BOOLEAN,
+  team_id VARCHAR(255),
   request_id VARCHAR(255),
   CONSTRAINT price_check CHECK (price >= 0),
+  FOREIGN KEY (team_id) REFERENCES Teams(team_id),
   FOREIGN KEY (request_id) REFERENCES Requests(request_id)
 );
