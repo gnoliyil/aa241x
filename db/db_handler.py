@@ -2,7 +2,16 @@ import psycopg2 as pg
 from psycopg2.sql import SQL, Identifier
 from psycopg2.extras import DictCursor
 
+class Default(object):
+    def __conform__(self, proto):
+        if proto is pg.extensions.ISQLQuote:
+            return self
+
+    def getquoted(self):
+        return 'DEFAULT'
+
 class DBHandler:
+    DEFAULT = Default()
 
     def __init__(self, db_name, user, password='', host='localhost'):
         self.db_name = db_name
