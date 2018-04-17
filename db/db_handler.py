@@ -110,18 +110,18 @@ class DBHandler:
             if i < num_values - 1: values_format += ', '
 
         if not columns:
-            sql = SQL('INSERT INTO {} VALUES({});'.format(table, values_format))
+            sql = SQL('INSERT INTO {} VALUES({}) RETURNING *;'.format(table, values_format))
         else:
             identifiers = [Identifier(i) for i in columns]
             str_identifiers = ', '.join(['{}'] * num_values)
-            sql = SQL('INSERT INTO {}({}) VALUES({})'.format(table, str_identifiers, values_format)).format(*identifiers)
+            sql = SQL('INSERT INTO {}({}) VALUES({}) RETURNING *'.format(table, str_identifiers, values_format)).format(*identifiers)
 
         try:
             print(sql)
             self.cur.execute(sql, values_tuple)
             self.con.commit()
             if self.cur.description:
-                return self.cur.fetchall()
+                return self.cur.fetchone()
         except pg.Error as e:
             print('Failed to insert values into {}. Rolling back connection. ERROR:'.format(table), e)
             # resets cursor, otherwise any future executes will generate an InternalError
