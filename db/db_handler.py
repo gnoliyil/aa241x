@@ -52,6 +52,30 @@ class DBHandler:
             # resets cursor, otherwise any future executes will generate an InternalError
             self.con.rollback()
 
+    def count(self, table, condition, args=()):
+        """Executes a query and returns the output one result."""
+        try:
+            self.cur.execute('SELECT COUNT(*) FROM {} WHERE {}'.format(table, condition), args)
+            self.con.commit()
+            if self.cur.description:
+                return self.cur.fetchone()['count']
+        except pg.Error as e:
+            print('Query failed. Rolling back connection. ERROR:', e)
+            # resets cursor, otherwise any future executes will generate an InternalError
+            self.con.rollback()
+
+    def query_one(self, query, args=()):
+        """Executes a query and returns the output one result."""
+        try:
+            self.cur.execute(query, args)
+            self.con.commit()
+            if self.cur.description:
+                return self.cur.fetchone()
+        except pg.Error as e:
+            print('Query failed. Rolling back connection. ERROR:', e)
+            # resets cursor, otherwise any future executes will generate an InternalError
+            self.con.rollback()
+
     def query_list(self, query, args=()):
         """Executes a query and returns the output as a list."""
         try:
