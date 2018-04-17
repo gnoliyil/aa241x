@@ -138,6 +138,9 @@ class TeamServerSideProtocol(NetstringReceiver):
                 'type': 'response',
                 'result': 'success'
             })
+            self.auth_t.cancel()
+            with self.db:
+                self.db.query_list('UPDATE Teams SET is_logged_in = TRUE WHERE team_id = %s;', (team_id,))
 
 
 class MainFactory(ServerFactory):
