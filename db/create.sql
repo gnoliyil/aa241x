@@ -57,7 +57,6 @@ CREATE TABLE Requests(
   time_expected TIMESTAMP,
   price_expected FLOAT,
   price_f_slope FLOAT,
-  call_id INTEGER,
   state VARCHAR(255) REFERENCES Request_States(state),
   from_port VARCHAR(255) REFERENCES Ports(port_id),
   to_port VARCHAR(255) REFERENCES Ports(port_id),
@@ -84,7 +83,7 @@ CREATE TABLE Drone_States(
 );
 
 CREATE TABLE Bids(
-  bid_id VARCHAR(255) PRIMARY KEY,
+  bid_id SERIAL NOT NULL PRIMARY KEY,
   price FLOAT,
   succeeded BOOLEAN,
   team_id VARCHAR(255),
