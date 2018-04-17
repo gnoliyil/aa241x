@@ -97,7 +97,7 @@ class DBHandler:
             # resets cursor, otherwise any future executes will generate an InternalError
             self.con.rollback()
 
-    def insert_values(self, table, values_tuple):
+    def insert_values(self, table, values_tuple, columns = ()):
         """Insert values into table.
         values_format must be a the format in which the values are written.
         values_tuple must be a tuple of all values, matching the table type."""
@@ -109,9 +109,15 @@ class DBHandler:
             values_format += '%s'
             if i < num_values - 1: values_format += ', '
 
-        sql = 'INSERT INTO {} VALUES({});'.format(table, values_format)
+        if not columns:
+            sql = SQL('INSERT INTO {} VALUES({});'.format(table, values_format))
+        else:
+            identifiers = [Identifier(i) for i in columns]
+            str_identifiers = ', '.join(['{}'] * num_values)
+            sql = SQL('INSERT INTO {}({}) VALUES({})'.format(table, str_identifiers, values_format)).format(*identifiers)
 
         try:
+            print(sql)
             self.cur.execute(sql, values_tuple)
             self.con.commit()
             if self.cur.description:
@@ -136,7 +142,7 @@ class DBHandler:
 
         identifiers = [Identifier(i) for i in columns]
         if num_values != 1:
-            str_identifiers = ('(' + ', '.join(['{}'] * num_values) + ')')
+            str_identifiers = '(' + ', '.join(['{}'] * num_values) + ')'
         else:
             str_identifiers = '{}'
 
