@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS Bids CASCADE;
+DROP TABLE IF EXISTS Drone_States_History CASCADE;
 DROP TABLE IF EXISTS Drone_States CASCADE;
 DROP TABLE IF EXISTS Ports CASCADE;
 DROP TABLE IF EXISTS Requests CASCADE;
@@ -64,7 +65,8 @@ CREATE TABLE Requests(
 );
 
 -- TODO: Consider using PostGIS for spatial data. --
-CREATE TABLE Drone_States(
+CREATE TABLE Drone_States_History(
+  record_id SERIAL NOT NULL PRIMARY KEY,
   team_id VARCHAR(255),
   drone_id VARCHAR(255),
   time_stamp TIMESTAMP,
@@ -82,9 +84,19 @@ CREATE TABLE Drone_States(
   FOREIGN KEY (team_id, drone_id) REFERENCES Drones(team_id, drone_id)
 );
 
+CREATE TABLE Drone_States(
+  team_id VARCHAR(255),
+  drone_id VARCHAR(255),
+  record_id INTEGER REFERENCES Drone_States_History(record_id),
+  PRIMARY KEY (team_id, drone_id),
+  FOREIGN KEY (record_id) REFERENCES Drone_States_History(record_id)
+);
+
 CREATE TABLE Bids(
   bid_id SERIAL NOT NULL PRIMARY KEY,
   price FLOAT,
+  time_estimated_arrival TIMESTAMP,
+  accepted BOOLEAN, /* rename */
   succeeded BOOLEAN,
   team_id VARCHAR(255),
   request_id VARCHAR(255),
