@@ -134,6 +134,8 @@ class TeamServerSideProtocol(NetstringReceiver):
 
         else:
             self.factory.protocols[self] = team_id
+            with self.db:
+                self.db.query_list('UPDATE Teams SET is_logged_in = TRUE WHERE team_id = %s;', (team_id, ))
             self.writeToTeam({
                 'type': 'response',
                 'result': 'success'
