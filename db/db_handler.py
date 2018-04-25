@@ -2,7 +2,16 @@ import psycopg2 as pg
 from psycopg2.sql import SQL, Identifier
 from psycopg2.extras import DictCursor
 
+class Default(object):
+    def __conform__(self, proto):
+        if proto is pg.extensions.ISQLQuote:
+            return self
+
+    def getquoted(self):
+        return 'DEFAULT'
+
 class DBHandler:
+    DEFAULT = Default()
 
     def __init__(self, db_name, user, password='', host='localhost'):
         self.db_name = db_name
@@ -52,6 +61,30 @@ class DBHandler:
             # resets cursor, otherwise any future executes will generate an InternalError
             self.con.rollback()
 
+    def count(self, table, condition, args=()):
+        """Executes a query and returns the output one result."""
+        try:
+            self.cur.execute('SELECT COUNT(*) FROM {} WHERE {}'.format(table, condition), args)
+            self.con.commit()
+            if self.cur.description:
+                return self.cur.fetchone()['count']
+        except pg.Error as e:
+            print('Query failed. Rolling back connection. ERROR:', e)
+            # resets cursor, otherwise any future executes will generate an InternalError
+            self.con.rollback()
+
+    def query_one(self, query, args=()):
+        """Executes a query and returns the output one result."""
+        try:
+            self.cur.execute(query, args)
+            self.con.commit()
+            if self.cur.description:
+                return self.cur.fetchone()
+        except pg.Error as e:
+            print('Query failed. Rolling back connection. ERROR:', e)
+            # resets cursor, otherwise any future executes will generate an InternalError
+            self.con.rollback()
+
     def query_list(self, query, args=()):
         """Executes a query and returns the output as a list."""
         try:
@@ -64,7 +97,7 @@ class DBHandler:
             # resets cursor, otherwise any future executes will generate an InternalError
             self.con.rollback()
 
-    def insert_values(self, table, values_tuple):
+    def insert_values(self, table, values_tuple, columns = ()):
         """Insert values into table.
         values_format must be a the format in which the values are written.
         values_tuple must be a tuple of all values, matching the table type."""
@@ -76,13 +109,19 @@ class DBHandler:
             values_format += '%s'
             if i < num_values - 1: values_format += ', '
 
-        sql = 'INSERT INTO {} VALUES({});'.format(table, values_format)
+        if not columns:
+            sql = SQL('INSERT INTO {} VALUES({}) RETURNING *;'.format(table, values_format))
+        else:
+            identifiers = [Identifier(i) for i in columns]
+            str_identifiers = ', '.join(['{}'] * num_values)
+            sql = SQL('INSERT INTO {}({}) VALUES({}) RETURNING *'.format(table, str_identifiers, values_format)).format(*identifiers)
 
         try:
+            print(sql)
             self.cur.execute(sql, values_tuple)
             self.con.commit()
             if self.cur.description:
-                return self.cur.fetchall()
+                return self.cur.fetchone()
         except pg.Error as e:
             print('Failed to insert values into {}. Rolling back connection. ERROR:'.format(table), e)
             # resets cursor, otherwise any future executes will generate an InternalError
@@ -103,7 +142,7 @@ class DBHandler:
 
         identifiers = [Identifier(i) for i in columns]
         if num_values != 1:
-            str_identifiers = ('(' + ', '.join(['{}'] * num_values) + ')')
+            str_identifiers = '(' + ', '.join(['{}'] * num_values) + ')'
         else:
             str_identifiers = '{}'
 
