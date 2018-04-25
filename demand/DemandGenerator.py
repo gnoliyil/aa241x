@@ -20,6 +20,7 @@ class DemandGenerator():
         k_rows: number of rows in outputfile, where each row represents one request.
         interval: time interval between requests, in seconds
         '''
+        # TODO: add randomness to interval times.
         with open(filename, 'w') as csvfile:
             fieldnames = ['datetime', 'from_port', 'to_port', 'pax']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
