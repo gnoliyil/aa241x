@@ -27,7 +27,15 @@ class Simulator():
                 return
 
             # TODO: consider using mutex if we change the way we edit the queue.
-            self.droneStates.append((x, y, z))
+            self.droneStates.append({
+                'type': 'real',
+                'longitude': x,
+                'latitude': y,
+                'altitude': z,
+                'velocity': [1, 2, 3],
+                'pax': [],
+                'drone-state': 'working'
+            })
             x += 1
             y += 2
             z += 3

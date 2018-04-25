@@ -1,0 +1,5 @@
+__pycache__
+db/__pycache__
+.DS_Store
+keys.py
+log.txt

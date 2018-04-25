@@ -1,0 +1,2 @@
+CLIENT_USERNAME = "team_1"
+CLIENT_PASSWORD = "password1"
