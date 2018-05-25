@@ -23,8 +23,6 @@ CREATE TABLE Students(
 	team_id VARCHAR(255) REFERENCES Teams(team_id)
 );
 
--- INSERT INTO Team_Login VALUES(1, 't1', 'FALSE'); --
-
 CREATE TABLE Drones(
   team_id VARCHAR(255) REFERENCES Teams(team_id),
   drone_id VARCHAR(255),

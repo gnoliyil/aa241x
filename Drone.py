@@ -34,5 +34,6 @@ class Drone():
         self.lastUpdated = timestamp
         # TODO: store current state to database (or in MainServer.py)
 
+
     def getMostRecentState(self):
         return self.state

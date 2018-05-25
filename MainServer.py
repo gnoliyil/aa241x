@@ -12,6 +12,7 @@ import utils
 import json
 from threading import Timer
 from db import DBHandler
+import team_utils as tu
 
 
 class TeamServerSideProtocol(NetstringReceiver):
@@ -26,6 +27,7 @@ class TeamServerSideProtocol(NetstringReceiver):
         '''
         self.db = self.factory.db
 
+        # Remember we work with protocols. Every protocol is a connection
         self.factory.protocols[self] = None
         self.factory.numProtocols += 1
         self.factory.writeToLog(
@@ -33,24 +35,24 @@ class TeamServerSideProtocol(NetstringReceiver):
 
     def stringReceived(self, line):
         '''
-        Called when line/message is received from team. We usually check the start of the line to decide what to do.
+        Called when line/message is received from team. Always check 'type' to decide what to do.
         '''
 
         # Get message and log it.
         team_id = self.factory.protocols[self]
         message = line.decode()
-        self.factory.writeToLogFromTeam(message, team_id)
+        self.factory.writeToLogFromTeam(message, team_id)  # TODO: Have a separate log for each team.
 
         # deserialize message
         message = json.loads(message)
 
         # Team Authentication
         if message['type'] == 'auth':
-            team_id = self.processAuthentication(message)
+            tu.processAuthentication(self,message)
 
         # Team is trying to send a message without our approval.
         elif team_id is None or not self.factory.teams[team_id].isLoggedIn():
-            self.writeToTeam({
+            tu.writeToTeam(self, {
                 'type': 'response',
                 'result': 'error',
                 'msg': 'Please login first.'
@@ -65,16 +67,16 @@ class TeamServerSideProtocol(NetstringReceiver):
                 for state in message['states']:
                     drone_id = state['drone_id']
                     self.factory.teams[team_id].upateDroneState(drone_id, state, timestamp)
-                self.writeToTeam({
+                tu.writeToTeam(self, {
                     'type': 'response',
                     'result': 'success'
                 })
             elif message['type'] == 'logout':
-                self.factory.logOutTeam()
-                self.writeToTeam({
+                tu.writeToTeam(self, {
                     'type': 'response',
                     'result': 'success'
                 })
+                self.factory.logOutTeam()
             elif message['type'] == 'bid-response':
                 # TODO: implement
                 pass
@@ -98,51 +100,7 @@ class TeamServerSideProtocol(NetstringReceiver):
 
     # -------------------------------------------------------------------------#
 
-    def denyTeam(self, reason):
-        '''
-        Close connection with user for given reason
-        '''
-        self.writeToTeam({
-            'type': 'response',
-            'result': 'error',
-            'msg': reason
-        })
-        self.transport.loseConnection()
-
-    def writeToTeam(self, message):
-        '''
-        Writes to the team assigned to this protocol, and logs the message.
-        :param dict message
-        '''
-        team_id = self.factory.protocols[self]
-        self.factory.writeToLogToTeam(json.dumps(message), team_id)
-        self.sendString(json.dumps(message).encode())
-
-    def processAuthentication(self, message):
-        '''
-        Run all logic for authenticating and 'logging in' a user.
-        '''
-        team_id, password = message["team-id"], message["password"]
-        if team_id not in self.factory.teams:
-            self.denyTeam('Team {} not found'.format(team_id))
-
-        elif self.factory.teams[team_id].isLoggedIn():
-            self.denyTeam('Team ' + team_id + ' is already logged in.')
-
-        elif not self.factory.teams[team_id].tryLogin(password, self):
-            self.denyTeam('Password error.')
-
-        else:
-            self.factory.protocols[self] = team_id
-            with self.db:
-                self.db.query_list('UPDATE Teams SET is_logged_in = TRUE WHERE team_id = %s;', (team_id, ))
-            self.writeToTeam({
-                'type': 'response',
-                'result': 'success'
-            })
-            # self.auth_t.cancel()
-            with self.db:
-                self.db.query_list('UPDATE Teams SET is_logged_in = TRUE WHERE team_id = %s;', (team_id,))
+ #HERE
 
 
 class MainFactory(ServerFactory):
@@ -164,8 +122,8 @@ class MainFactory(ServerFactory):
     def _loadTeams(self):
         with self.db:
             teams = self.db.query_list('SELECT * FROM Teams;')
-            self.db.query_list('UPDATE Teams SET is_logged_in = FALSE;')  # reset all login states
-        self.teams = {team['team_id']: Team(team['team_id'], team['password']) for team in teams}
+            self.db.query_list('UPDATE Teams SET is_logged_in = FALSE;')  # reset all login states to logged out.
+        self.teams = {team['team_id']: Team(team['team_id'], team['password'], self.db) for team in teams}
 
     # ---------------TWISTED FACTORY METHODS----------------------------------#
 
@@ -177,9 +135,10 @@ class MainFactory(ServerFactory):
         '''
         Called when factory starts running. Sets isRunning to true for logging. Opens files.
         '''
+        print('[SERVER] Factory started. Waiting for connections.')
         self.isRunning = True
         self.log = open(LOG_NAME, 'a')
-        self.log.write('Starting new log: ' + str(datetime.now()) + '\n')
+        self.log.write('\nStarting new log: ' + str(datetime.now()) + '\n')
 
     # Factory shutdown
     def stopFactory(self):
@@ -187,7 +146,7 @@ class MainFactory(ServerFactory):
         Called when factory is shutting down. Set isRunning to false so we can log without errors, and closes opened files.
         '''
         self.isRunning = False
-        self.log.write('\n')
+        self.log.write('Stopping factory. \n')
         self.log.close()
 
     # ---------------LOGGING METHODS-------------------------------------------#
@@ -230,8 +189,6 @@ class MainFactory(ServerFactory):
     def logOutTeam(self, protocol, team_id):
         if team_id is not None:
             self.teams[team_id].logOut()
-            with self.db:
-                self.db.query_list('UPDATE Teams SET is_logged_in = FALSE WHERE team_id = %s;', (team_id,))
             self.writeToLog('Team ' + team_id + ' logged out.')
 
     def sendTask(self, team_id, request_id):
@@ -254,7 +211,7 @@ class MainFactory(ServerFactory):
 
         for protocol in self.factory.protocols:
             if self.factory.protocols[protocol] == team_id:
-                protocol.writeToTeam(task_generated)
+                tu.writeToTeam(protocol, task_generated)
 
     def broadcastRequest(self, request_id):
         with self.db:
@@ -278,7 +235,7 @@ class MainFactory(ServerFactory):
 
         # team connected
         for protocol in self.factory.protocols:
-            protocol.writeToTeam(request_generated)
+            tu.writeToTeam(protocol, request_generated)
         callId = reactor.callLater(REQUEST_TIMEOUT, self.bidTimeOut, (request['request_id'],))
         self.requestCallId[request['request_id']] = callId
         with self.db:
@@ -353,7 +310,7 @@ class MainFactory(ServerFactory):
                                   (record_id, team_id, state['drone_id']))
 
 
-    def onRecieveTaskResponse(self, task_response):
+    def onReceiveTaskResponse(self, task_response):
         request_id = task_response['request_id']
         team_id = task_response['team_id']
 
@@ -403,6 +360,10 @@ class MainFactory(ServerFactory):
                 else:
                     self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;',
                                       ('BID_RECEIVED', request_id))
+
+        # --------------------------- TEAM FUNCTIONS ---------------------------------------- #
+        def isLoggedIn(team_id, db):
+            pass
 
 
 # 8007 is the port you want to run under. Choose something >1024
