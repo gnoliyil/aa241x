@@ -7,7 +7,7 @@
 <h2 id="summary">Summary</h2>
 <p>Welcome to the documentation for Stanford AA 241x: Spring 2018. Here we will describe the architecture for our Automated Drone Bidding System which goal is to simulate Uber Elevate’s eVTOL service using DJI drones.</p>
 <p>During a simulation, we will have 2 types of servers running: <code>MainServer (MainServer.py)</code> and <code>TeamServer (MainServer.py)</code>. There will be one 	<code>MainServer</code> running (by the class admins) and one <code>TeamServer</code> running for every team in the simulation. The <code>MainServer</code> has a two-way communication with the <code>TeamServer</code>s, while <code>TeamServer</code>s cannot communicate with each other.</p>
-<p>Each team has multiple drones flying (only one physical one). Each physical drone is a DJI Spark and is controlled by a RemoteController which has an Android device plugged in to it.  The Android device runs our own version of the DJI This app receives information from a server running on the Team’s computer, which is used to control the drone.</p>
+<p>Each team has multiple drones flying (only one physical one). <strong>The drone_id of the physical drone must be 0</strong>. Each physical drone is a DJI Spark and is controlled by a RemoteController which has an Android device plugged in to it.  The Android device runs our own version of the DJI This app receives information from a server running on the Team’s computer, which is used to control the drone.</p>
 <p>In the next sections we will provide the necessary documentation for the teams to communicate with the <code>MainServer</code> through their respective <code>TeamServer</code>s and for teams to control their drones.</p>
 <h2 id="mainserver---teamserver-communication">MainServer &lt;-&gt; TeamServer Communication</h2>
 <p>The<code>MainServer</code> is connected with the <code>TeamServers</code> using the <code>Twisted</code> protocol. To start communication, the admins will first launch the MainServer and be open for communication. IP address and Port number will be provided to the teams. To initiate communication teams should simply run their <code>TeamServer.py</code> program, which has everything set up for communication. Make sure to run <code>TeamServer.py &lt;team_id&gt; &lt;password&gt;</code>  to be able to login. Also make sure to install all the requirements in <code>requirements.txt</code> using <code>pip install -r requirements.txt</code> and use python3.</p>
@@ -108,7 +108,6 @@
   'type': 'drone_state'
   'drone_state': {
 	  'drone_id': (int),         # ID of drone being updated. 
-	  'type': (text),            # 'physical' or 'simulation'
 	  'longitude': (text),       # 
 	  'latitude': (text),        #
 	  'altitude': (text),        #
@@ -117,13 +116,14 @@
 	  'battery_left': (float),   # 0 &lt;= x &lt;= 100
 	  'state': (text),           # 'working' or 'not_working' 
 	  'fulfilling': (bool),      # True if drone is fulfilling a request. 
-	  'from_port': (int),        # None if not fulfilling 
-	  'to_port': (int),          # None if not fulfilling 
+	  'next_port': (int),        # Port where drone is headed to if fulfilling is True. 
+								 # i.e. if drone is looking for passenger, then next_port = from_port. 
+								 # if drone has passengers, then next_port = to_port. None if fulfilling is false.  
   }
 }
 </code></pre>
 <h4 id="iii.-responses">iii. Responses</h4>
-<p>Every time the <code>TeamServer</code> sends a message to the <code>MainServer</code>, the <code>MainServer</code> will send a response back acknowledging the message. Note that for  	<code>'type': 'auth'</code>, this response message differs. The team can ignore this message, but make sure to be aware if they receive an error response.</p>
+<p>Every time the <code>TeamServer</code> sends a message to the <code>MainServer</code>, the <code>MainServer</code> will send a response back acknowledging the message. Note that for  	<code>'type': 'auth'</code>, this response message differs. The team can ignore this message, but make sure to be aware if they receive an error response. <strong>Make sure to be receiving the correct responses.</strong></p>
 <pre><code># MainServer -&gt; TeamServer
 {
  'type': 'response',
