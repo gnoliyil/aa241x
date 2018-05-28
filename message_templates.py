@@ -23,8 +23,7 @@ def REQUEST_MSG(request):
         'request': {
             'request_id': request['request_id'],
             'k_passengers': request['k_passengers'],
-            'time_expected': request['time_expected'],
-            'price_expected': request['price_expected'],
+            'expected_price': request['expected_price'],
             'from_port': request['from_port'],
             'to_port': request['to_port'],
         }

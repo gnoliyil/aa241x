@@ -36,7 +36,7 @@ CREATE TABLE Fly_States(
   description TEXT
 );
 
--- WAITING, SENT, TIMEOUT_DONE, ACCEPTED, DONE, FAILED
+-- Options: WAITING, SENT, NOT_ACCEPTED, ACCEPTED, ALL_ACCEPTED, ASSIGNED, DONE, FAILED
 CREATE TABLE Request_States(
   state VARCHAR(255) PRIMARY KEY,
   description TEXT
@@ -49,16 +49,15 @@ CREATE TABLE Ports(
   altitude VARCHAR(255)
 );
 
-
--- TODO: add sent_to column
 CREATE TABLE Requests(
   request_id SERIAL NOT NULL PRIMARY KEY,
+	sent_to INTEGER,  -- number of teams the request was sent to.
   k_passengers INTEGER,
   time_requested TIMESTAMP,
   time_assigned TIMESTAMP,
   time_completed TIMESTAMP,
-  time_expected TIMESTAMP,
-  price_expected FLOAT,
+  time_expected TIMESTAMP, -- time we expect bid to finish at.
+  expected_price FLOAT,
   price_f_slope FLOAT,
   state VARCHAR(255) REFERENCES Request_States(state),
   from_port INTEGER REFERENCES Ports(port_id),
@@ -66,7 +65,7 @@ CREATE TABLE Requests(
   CONSTRAINT k_passengers_check CHECK (k_passengers >= 0 AND k_passengers <= 4)
 );
 
--- TODO: Consider using PostGIS for spatial data. --
+
 CREATE TABLE Drone_States_History(
   record_id SERIAL NOT NULL PRIMARY KEY,
   team_id VARCHAR(255),
@@ -78,7 +77,7 @@ CREATE TABLE Drone_States_History(
 	velocity VARCHAR(255),  -- string representing list i.e. "[1.3,2,3]"
 	k_passengers INTEGER,
   battery_left FLOAT,
-	state VARCHAR(255),
+	state VARCHAR(255), -- TODO: REFERENCES Fly_States
   next_port INTEGER REFERENCES Ports(port_id),
   fulfilling INTEGER REFERENCES Requests(request_id),
   CONSTRAINT battery_check CHECK (battery_left >= 0 AND battery_left <= 100),
@@ -90,17 +89,18 @@ CREATE TABLE Drone_States(
   team_id VARCHAR(255),
   drone_id VARCHAR(255),
   record_id INTEGER REFERENCES Drone_States_History(record_id),
-  PRIMARY KEY (team_id, drone_id),
-  FOREIGN KEY (record_id) REFERENCES Drone_States_History(record_id)
+  PRIMARY KEY (team_id, drone_id)
 );
 
 CREATE TABLE Bids(
   bid_id SERIAL NOT NULL PRIMARY KEY,
   price FLOAT,
-  time_estimated_arrival TIMESTAMP,
-  accepted BOOLEAN, /* rename */
-  succeeded BOOLEAN,
-  team_id VARCHAR(255) REFERENCES Teams(team_id),
+  seconds_expected INTEGER,
+	drone_id INTEGER,
+  accepted BOOLEAN, -- True if team accepted the bid.
+  won BOOLEAN, -- True if team won the bid
+  team_id VARCHAR(255),
   request_id INTEGER REFERENCES Requests(request_id),
-  CONSTRAINT price_check CHECK (price >= 0)
+  CONSTRAINT price_check CHECK (price >= 0),
+	FOREIGN KEY (team_id, drone_id) REFERENCES Drones(team_id, drone_id)
 );

@@ -10,3 +10,11 @@ DRONE_STATE_ATTRS = [
     'fulfilling',
     'next_port'
 ]
+
+BID_ATTRS = [
+    'request_id',
+    'accepted',
+    'drone_id',
+    'seconds_expected',
+    'price',
+]

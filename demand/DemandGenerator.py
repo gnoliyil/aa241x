@@ -21,7 +21,7 @@ class DemandGenerator():
         '''
         # TODO: add randomness to interval times.
         with open(filename, 'w') as csvfile:
-            fieldnames = ['datetime', 'from_port', 'to_port', 'k_passengers']
+            fieldnames = ['datetime', 'from_port', 'to_port', 'k_passengers', 'expected_price']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
@@ -31,7 +31,8 @@ class DemandGenerator():
                     'datetime': self.start_datetime + datetime.timedelta(seconds=i*interval),
                     'from_port': ports[0],
                     'to_port': ports[1],
-                    'k_passengers': self._get_pax()
+                    'k_passengers': self._get_pax(),
+                    'expected_price': self._get_expected_price()
                 }
                 writer.writerow(row)
 
@@ -46,6 +47,10 @@ class DemandGenerator():
         #start_datetime = datetime.datetime(today.year, today.month, today.day, hour=15, minute=0, second=0)
         start_datetime = datetime.datetime.now() + datetime.timedelta(seconds=self.start_delay)
         return start_datetime
+
+    def _get_expected_price(self):
+        # TODO: implement with actual prices.
+        return 100
 
 def main():
     dg = DemandGenerator()

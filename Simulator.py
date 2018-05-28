@@ -4,9 +4,10 @@ import time
 class Simulator():
     def __init__(self, droneStates, drone_id):
         '''
-        Simulator for drone data sender. We will need to change this when we learn about the SDK.
+        Simulator of a Drone data sender. Teams should implement their own
+        data sender which takes a droneStates queue and appends drone states to it.
         Initialize variables:
-            duration: duration of simulation in seconds. Not really necessary?
+            duration: duration of simulation in seconds.
             droneStates: queue of states to which we will add new states received from drone.
         '''
         self.drone_id = drone_id
@@ -25,8 +26,6 @@ class Simulator():
             # Check if we have to finish thread.
             if not run_event.is_set():
                 return
-
-            # TODO: consider using mutex if we change the way we edit the queue.
 
             # NOTE: Use a similar function for when you are using real drones. Simply append the states to
             # the queue, and team server will handle the communication.

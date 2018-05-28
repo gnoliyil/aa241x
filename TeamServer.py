@@ -10,8 +10,7 @@ from Simulator import Simulator  # TODO: delete when we stop using simulator.
 class TeamClientSideProtocol(NetstringReceiver):
 
     def __init__(self):
-        self.clientState = 'INIT'
-        self.droneStates = []  # TODO: This is just a placeholder list for simulation purposes. This assumes there is only one drone per team right now.
+        self.droneStates = [[] for _ in range(tv.NUM_DRONES)]
 
     #---------------TWISTED PROTOCOL METHODS----------------------------------#
 
@@ -21,13 +20,21 @@ class TeamClientSideProtocol(NetstringReceiver):
         '''
         message = json.loads(line.decode())
         print('[FROM SERVER] ', message)
+        print()
+
+        # TODO: Check that message containts the relevant fields.
 
         if message['type'] == 'response':
             if self.clientState == 'LOGGING-IN':
                 if message['result'] == 'success':
                     self.clientState = 'LOGGED-IN'
-                    self.startSimulation()
-                    self.sendDroneState()
+                    self.addToDroneStates()
+                    for drone_id in range(tv.NUM_DRONES):
+                        self.sendDroneState(drone_id)
+
+        elif message['type'] == 'request':
+            request = message['request']
+            self.decideBid(request)
 
 
     def connectionMade(self):
@@ -51,13 +58,7 @@ class TeamClientSideProtocol(NetstringReceiver):
         print('[TO SERVER] ', message)
         self.sendString(json.dumps(message).encode())
 
-    #-------------------------------------------------------------------------#
-
-    #######################TODO FOR TEAM###################################
-    # 2) Implement function to handle bidding logic.
-    #######################################################################
-
-    #######################################################################
+    #------------------------OUR METHODS-------------------------------------#
 
     def startSimulation(self):
         '''
@@ -65,23 +66,18 @@ class TeamClientSideProtocol(NetstringReceiver):
         thread.
         '''
         for drone_id in range(tv.NUM_DRONES):
-            simulator = Simulator(self.droneStates, drone_id)
-            t = threading.Thread(target=simulator.run, args=(self.factory.run_event, ))
+            simulator = Simulator(self.droneStates[drone_id], drone_id)
+            t = threading.Thread(target=simulator.run, args=(self.factory.run_event,))
             t.start()
             self.factory.threads.append(t)
 
-
-    def sendDroneState(self):
+    def sendDroneState(self, drone_id):
         '''
         Important method. Send drone state to main server every DRONE_UPDATE_INTERVAL seconds.
         We call reactor reactor.callLater() to recall the method on the set interval.
         '''
-        #######################TODO FOR TEAM###################################
-        # 1) Implement this function with actual drone information.
-        ######################################################################
-        if self.droneStates:
-            lastState = self.droneStates[-1]
-            drone_id = '0' # TODO; 0 is just a placeholder
+        if self.droneStates[drone_id]:
+            lastState = self.droneStates[drone_id][-1]
             self.writeToServer({
                 'type': 'drone_state',
                 'drone_state': {
@@ -97,9 +93,70 @@ class TeamClientSideProtocol(NetstringReceiver):
                     'next_port': lastState['next_port']
                 }
             })
-            self.droneStates.clear()
+            self.droneStates[drone_id].clear()
+        reactor.callLater(tv.DRONE_UPDATE_INTERVAL, self.sendDroneState, drone_id)
+
+    #------------------------METHOD TO IMPLEMENT-------------------------------#
+
+    def decideBid(self, request):
+        '''
+        Important method. Decides if we want to submit a bid to the given request.
+        '''
+        request_id = request['request_id']
+        k_passengers = request['k_passengers']
+        expected_price = request['expected_price']
+        from_port = request['from_port']
+        to_port = request['to_port']
+        #######################TODO FOR TEAM###################################
+        # 1) Implement this function with your own algorithm for deciding how
+        # much to bid. This should take into account price and ETA,
+        # and k_passengers. We currently
+        # use our own dummy function that bids the expected_price.
         ######################################################################
-        reactor.callLater(tv.DRONE_UPDATE_INTERVAL, self.sendDroneState)
+        wantToBid = True  # TODO: decide if you want to bid.
+        if wantToBid:
+            drone_id = 0            # TODO: decide what drone to use
+            seconds_expected = 120     # TODO: Calculate expected time of trip, in seconds.
+            price = expected_price  # TODO: decide your price.
+        ######################################################################
+        if wantToBid:
+            message = { 'type': 'bid',
+              'bid': {
+                 'request_id': request_id,
+                 'accepted': True,
+                 'drone_id': drone_id,
+                 'seconds_expected': seconds_expected,
+                 'price': price
+              }
+            }
+        else:
+            message = { 'type': 'bid',
+              'bid': {
+                 'request_id': request_id,
+                 'accepted': False,
+                 'drone_id': None,
+                 'seconds_expected': None,
+                 'price': None
+              }
+            }
+        self.writeToServer(message)
+
+
+    def addToDroneStates(self):
+        #######################TODO FOR TEAM###################################
+        # 2) Implement a function that has the same functionality as
+        # startSimulation/Simulator, but with real drone data. You need to append
+        # drone state data from every drone drone_id to self.droneStates[drone_id],
+        # like we do in the Simulator. Please use that as a reference. Our
+        # sendDroneState function takes care of sending the data to the
+        # MainServer.
+        #
+        # Once you start writing this you can comment out all the simulation
+        # code, but make sure you have it as a reference.
+        ######################################################################
+        self.startSimulation()
+        ######################################################################
+
 
 
 

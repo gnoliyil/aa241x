@@ -24,6 +24,7 @@ import keys as k
 # Split logs per team. only print relevant stuff.
 # Incorporate drone COMMUNICATION
 # Make sure we can setup connection with other computer.
+# Consider sendind FAILED requests again after all WAITING ones have been sent.
 
 class TeamServerSideProtocol(NetstringReceiver):
 
@@ -96,9 +97,9 @@ class TeamServerSideProtocol(NetstringReceiver):
                 elif message['type'] == 'logout':
                     tu.logOutTeam(self.factory, team_id)
 
-                elif message['type'] == 'bid-response':
-                    # TODO: implement
-                    pass
+                elif message['type'] == 'bid':
+                    self.onReceiveBid(team_id, message)
+
                 elif message['type'] == 'task-response':
                     # TODO: implement
                     pass
@@ -118,9 +119,70 @@ class TeamServerSideProtocol(NetstringReceiver):
             if success:
                 tu.writeToTeam(self, mt.THANKS_MSG)
         except Exception as e:
-            tu.writeToTeam(self, mt.ERROR_RESPONSE('DB error. Make sure all fields are correct. Error: {}'.format(e))) # Send error
+            tu.writeToTeam(self, mt.ERROR_RESPONSE('DB error. Make sure all fields are correct. Error: {}'.format(str(e)))) # Send error
             print(traceback.format_exc())
 
+    def onReceiveBid(self, team_id, message):
+        '''
+        Handles bid reception from team. Checks request state, stores it in the database,
+        updates request state. If all teams submit a bid for a request, stops timeout.
+        Calls function to start sending the relevant task.
+        '''
+
+        # Make sure message if formatted properly.
+        if not su.hasattr(self, message, 'bid'): return
+        bid = message['bid']
+        if not su.hasattrs(self, bid, atts.BID_ATTRS): return
+
+        # Get request that corresponds to bid from DB and handle errors.
+        request_id = bid['request_id']
+        try:
+            with self.db:
+                result = self.db.query_one('SELECT * FROM requests WHERE request_id = %s', (request_id,))
+                if result is not None:
+                    request = result
+                else:
+                    raise Exception('[ERROR ON RECEIVING BID] Key error [request_id = {}]'.format(request_id))
+
+            # Case when bid already timed out
+            if request['state'] != 'SENT' and request['state'] != 'ACCEPTED':
+                raise Exception("[ERROR ON RECEIVING BID] Already timeout [TEAM# {1}, REQ# {0}]".format(team_id, request_id))
+
+
+            # Try to put into DB and update request_states
+            with self.db:
+                bid_exists = self.db.count('Bids', 'request_id = %s AND team_id = %s', (request_id, team_id))
+                if bid_exists:
+                    raise Exception('[ERROR ON RECEIVING BID] Bid already exists [TEAM# {1}, REQ# {0}]'.format(request_id, team_id))
+                else:
+                    bid_accepted = True if bid['accepted'] else False
+                    self.db.insert_values('Bids',
+                                          (DBHandler.DEFAULT, bid['price'], bid['seconds_expected'], bid['drone_id'], bid_accepted, False, team_id, request_id))  # TODO: make sure default works.
+
+                # count number of bids
+                n_bids = self.db.count('Bids', 'request_id = %s', (request_id,))
+                result = self.db.query_one('SELECT sent_to FROM Requests WHERE request_id = %s', (request_id,))
+                if result is not None:
+                    n_sent = result[0]
+                else:
+                    raise Exception('[ERROR ON RECEIVING BID] [TEAM# {1}, REQ# {0}]')
+
+                # Check if all teams submitted bids to stop timeout and send task.
+                if n_bids == n_sent:
+                    self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s; ',
+                                      ('ALL_ACCEPTED', request_id))
+                    lu.writeToLog(self.factory,"Received ALL bids for REQ# {}, timeout callback canceled.".format(request_id))
+                    self.factory.requestCallIds[request_id].cancel()
+                    self.factory.collectBids(request_id)
+                else:
+                    self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;',
+                                      ('ACCEPTED', request_id))
+            tu.writeToTeam(self, mt.THANKS_MSG)
+
+        except Exception as e:
+                lu.writeToLog(self.factory, str(e))
+                tu.writeToTeam(self, mt.ERROR_RESPONSE('Bidding error. Error: {}'.format(str(e))))
+                print(traceback.format_exc())
 
 class MainFactory(ServerFactory):
 
@@ -157,11 +219,12 @@ class MainFactory(ServerFactory):
         with open('./demand/demand.csv', newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             with handler:
+                handler.query_one('DELETE From Bids;')
                 handler.query_one('DELETE From Requests;')
                 for row in reader:
-                    handler.query_one('INSERT INTO Requests(k_passengers,from_port,to_port,time_requested, state)  \
-                                       VALUES (%s,%s,%s,%s,%s);', (row['k_passengers'],row['from_port'],
-                                       row['to_port'],row['datetime'], 'WAITING'))
+                    handler.query_one('INSERT INTO Requests(k_passengers,sent_to,expected_price,from_port,to_port,time_requested,state)  \
+                                       VALUES (%s,%s,%s,%s,%s,%s,%s);', (row['k_passengers'],0,row['expected_price'],row['from_port'],
+                                       row['to_port'],row['datetime'],'WAITING'))
 
     # ---------------TWISTED FACTORY METHODS----------------------------------#
 
@@ -226,7 +289,6 @@ class MainFactory(ServerFactory):
     def startNextBroadcastTimer(self):
         try:
             # Retrieve request.
-            # TODO: Makse sure we get the correct request which is determined by timestamp.
             request = su.getNextRequest(self.db)
 
             if request is None:
@@ -243,7 +305,6 @@ class MainFactory(ServerFactory):
             print(traceback.format_exc())
 
     def broadcastNextRequest(self, request):
-        # TODO: comment function, test it works.
         '''
         Query request from DB and set a timer to broadcast the given request at the
         time specified in the request.
@@ -255,6 +316,7 @@ class MainFactory(ServerFactory):
             # Send to all teams that are logged in and set timeout.
             for protocol in self.protocols:
                 tu.writeToTeam(protocol, request_msg)
+
             callId = reactor.callLater(REQUEST_TIMEOUT, self.bidTimeOut, request['request_id'])
             self.requestCallIds[request['request_id']] = callId
 
@@ -262,6 +324,9 @@ class MainFactory(ServerFactory):
             with self.db:
                 self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;',
                                   ('SENT', request['request_id']))
+                sent_to = len(self.protocols)
+                self.db.query_one('UPDATE Requests SET sent_to = %s WHERE request_id = %s;',
+                                  (sent_to, request['request_id']))
 
             self.startNextBroadcastTimer()
 
@@ -270,43 +335,63 @@ class MainFactory(ServerFactory):
             print(traceback.format_exc())
 
     def bidTimeOut(self, request_id):
-        # TODO: comment function, test it works.
+        '''
+        Call when bid request times out.
+        '''
+        # TODO: update to NOT_ACCEPTED if request state = SENT
         try:
-            lu.writeToLog(self, "[BID TIMEOUT] [request_id = {}]".format(request_id))
+            lu.writeToLog(self, "[BID TIMEOUT] [REQ# {}]".format(request_id))
             with self.db:
-                self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;', ('TIMEOUT_DONE', request_id))
-            # self.collectBid(request_id) TODO uncomment
+                # Check if someone accepted. If not, update state.
+                result = self.db.query_one('SELECT state FROM Requests WHERE request_id = %s', (request_id,))
+                if result is not None:
+                    state = result[0]
+                else:
+                    raise Exception('Failed to query request state.')
+                if state == 'SENT':
+                    self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;', ('NOT_ACCEPTED', request_id))
+                    lu.writeToLog(self, '[Request NOT_ACCEPTED] [REQ# {}]'.format(request_id))
+                    return
+
+            # If bid was accepted, collect bids.
+            self.collectBids(request_id)
         except Exception as e:
-            lu.writeToLog(self, '[ERROR] Failed to update bid after timeout. Error: {}'.format(str(e)))
+            lu.writeToLog(self, '[ERROR] On bid timeout. Error: {}'.format(str(e)))
             print(traceback.format_exc())
 
     def selectBestBid(self, request_id, bids):
         # dummy function now TODO implement
         return bids[0]
 
-    def collectBid(self, request_id):
+    # TODO: next function to implement and test!
+    def collectBids(self, request_id):
         # TODO: comment function, test it works.
-        # collect bids
-        # finds the best bid
-        with self.db:
-            bids_accepted = self.db.query_list('SELECT * FROM Bids WHERE request_id = %s AND accepted = TRUE;',
-                                               (request_id,))
+        '''
+        Collects bids for REQ# request_id and figures out what is the best bid.
+        Then we proceed to send the best bid to the given drone/team.
+        '''
+        print('COLLECT BIDS')
 
-            if len(bids_accepted) == 0:
-                # no bids accepted
-                self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;',
-                                  ('BID_COMPLETED_FAIL', request_id))
-                lu.writeToLog(self, '[REQUEST FAILED] No accepted bids for [REQ# {}]'.format(request_id))
-            else:
-                # there exist some bids
-                best_bid = self.selectBestBid(request_id, bids_accepted)
-                self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;'
-                                  'UPDATE Bids SET succeeded = %s WHERE bid_id = %s;',
-                                  ('BID_COMPLETED_SUCCESS', request_id, True, best_bid['bid_id']))
+        # with self.db:
+        #     bids_accepted = self.db.query_list('SELECT * FROM Bids WHERE request_id = %s AND accepted = TRUE;',
+        #                                        (request_id,))
+        #
+        #     if len(bids_accepted) == 0:
+        #         # no bids accepted
+        #         self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;',
+        #                           ('NOT_ACCEPTED', request_id))
+        #         lu.writeToLog(self, '[REQUEST FAILED] No accepted bids for [REQ# {}]'.format(request_id))
+        #     else:
+        #         # there exist some bids
+        #         best_bid = self.selectBestBid(request_id, bids_accepted)
+        #         self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;'
+        #                           'UPDATE Bids SET succeeded = %s WHERE bid_id = %s;',
+        #                           ('ACCEPTED', request_id, True, best_bid['bid_id']))
+        #
+        #         lu.writeToLog(self, '[REQUEST SUCCEEDED] Accept bid [BID# {}, TEAM# {}, REQ# {}]'
+        #                         .format(best_bid['bid_id'], best_bid['team_id'], request_id))
+        #         # self.sendBidResults(best_bid['team_id'], request_id) # TODO uncomment
 
-                lu.writeToLog(self, '[REQUEST SUCCEEDED] Accept bids [BID# {}, TEAM# {}, REQ# {}]'
-                                .format(best_bid['bid_id'], best_bid['team_id'], request_id))
-                self.sendBidResults(best_bid['team_id'], request_id)
 
     # ---------------------------------------------------------------
 
@@ -318,55 +403,11 @@ class MainFactory(ServerFactory):
         # TODO: implement.
         pass
 
-    def onReceiveBid(self, bid):
-        # check the request state
-        # store bid in database
-        # if all bids for a request are received, collect bid at once
-        request_id = bid['request_id']
-        team_id = bid['team_id']
-        try:
-            with self.db:
-                request = self.db.query_list('SELECT * FROM requests WHERE request_id = %s', (request_id,))[0]
-        except:
-            lu.writeToLog(self, "[ERROR ON RECEIVING BID] Key error [request_id = {}]".format(request_id))
-            return
 
-        if request['state'] == 'INIT':
-            # already time out
-            # TODO: send error message
-            lu.writeToLog(self,"[ERROR ON RECEIVING BID] Already timeout [TEAM# {}, REQ# {}]" \
-                            .format(team_id, request_id))
-            return
-        if request['state'] == 'REQUEST_SENT' or request['state'] == 'BID_RECEIVED':
-            with self.db:
-                # store bid into database
-                is_exists = self.db.count('Bids', 'request_id = %s AND team_id = %s', (request_id, team_id))
-                if is_exists:
-                    # TODO: send error message
-                    lu.writeToLog(self,'[ERROR ON RECEIVING BID] Bid already exists [TEAM# {1}, REQ# {0}]'
-                                    .format(request_id, team_id))
-                    return
-                else:
-                    bid_accepted = True if bid['accepted'] else False
-                    self.db.insert_values('Bids',
-                                          (DBHandler.DEFAULT, bid['price'], bid_accepted, False, team_id, request_id))
-
-                # count number of bids
-                n_bids = self.db.count('Bids', 'request_id = %s', (request_id,))
-                if n_bids == self.numProtocols:
-                    self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s; ',
-                                      ('BID_COMPLETED', request_id))
-                    lu.writeToLog(self,"[RECEIVING ALL BIDS] for [REQ# {}]".format(request_id))
-                    self.requestCallIds[request_id].cancel()
-                    lu.writeToLog(self,"[TIMEOUT CALLBACK CANCELLED] for [REQ# {}]".format(request_id))
-
-                    self.collectBid(request_id)  # process all bids
-                else:
-                    self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;',
-                                      ('BID_RECEIVED', request_id))
 
 # 8007 is the port you want to run under. Choose something >1024
 def main():
+    # TODO: Only create new demand and load requests if we are starting. If it crashes DONT reset.
     DemandGenerator(start_delay=10).generate_file(filename='./demand/demand.csv') # Generate demand file using current time # TODO: check why this is not working
 
     endpoint = TCP4ServerEndpoint(reactor, 8007)
