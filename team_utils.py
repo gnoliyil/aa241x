@@ -1,5 +1,11 @@
 import json
+import log_utils as lu
 
+
+def logOutTeam(factory, team_id):
+    if team_id is not None:
+        factory.teams[team_id].logOut()
+        lu.writeToLog(factory, 'Team ' + team_id + ' logged out.')
 
 def denyTeam(protocol, reason):
     '''
@@ -17,25 +23,30 @@ def writeToTeam(protocol, message):
     Writes to the team assigned to this protocol, and logs the message.
     :param dict message
     '''
-    team_id = protocol.factory.protocols[protocol]
-    protocol.factory.writeToLogToTeam(json.dumps(message), team_id)
-    protocol.sendString(json.dumps(message).encode())
+    try:
+        team_id = protocol.factory.protocols[protocol]
+        lu.writeToLogToTeam(protocol.factory, json.dumps(message), team_id)
+        protocol.sendString(json.dumps(message).encode())
+        return True
+    except:
+        return False
 
 def processAuthentication(protocol, message):
     '''
     Run all logic for authenticating and 'logging in' a user.
     '''
-    team_id, password = message["team-id"], message["password"]
+    # TODO: use hasattrs to confirm message format is correct
+    team_id, password = message["team_id"], message["password"]
 
     # Unsuccessful authentication
     if team_id not in protocol.factory.teams:
-        protocol.denyTeam('Team {} not found'.format(team_id))
+        denyTeam(protocol, 'Team {} not found'.format(team_id))
 
     elif bool(protocol.factory.teams[team_id].isLoggedIn()):
-        protocol.denyTeam('Team ' + team_id + ' is already logged in.')
+        denyTeam(protocol, 'Team {} is already logged in.'.format(team_id))
 
     elif not protocol.factory.teams[team_id].tryLogin(password, protocol):
-        protocol.denyTeam('Password error.')
+        denyTeam(protocol, 'Password error.')
 
 
     # Successful authentication
@@ -43,5 +54,6 @@ def processAuthentication(protocol, message):
         protocol.factory.protocols[protocol] = team_id
         writeToTeam(protocol, {
             'type': 'response',
-            'result': 'success'
+            'result': 'success',
+            'msg': None
         })

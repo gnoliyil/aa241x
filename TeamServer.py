@@ -1,13 +1,8 @@
 from twisted.internet import reactor, defer
 from twisted.protocols.basic import LineReceiver, NetstringReceiver
 from twisted.internet.protocol import Protocol, ReconnectingClientFactory, ProcessProtocol
-from sys import stdout
-import threading
-from allVars import *
-from clientVars import *
-import utils
-import datetime
-import json
+import allVars as av
+import threading, utils, datetime, json, sys
 
 from stateSimulator import Simulator  # TODO: delete when we stop using simulator.
 
@@ -39,16 +34,19 @@ class TeamClientSideProtocol(NetstringReceiver):
 
     def connectionMade(self):
         '''
-        Called when a connection with the main server has been established.
+        Called when a connection with the main server has been established. Tries to log in to the server.
         '''
         print('Connection with SERVER established.')
         # TODO: change to config file later
-        team_id, password = CLIENT_USERNAME, CLIENT_PASSWORD
+        #######################TODO FOR TEAM###################################
+        # Please update this with your team_id and password.
+        ######################################################################
         self.writeToServer({
             'type': 'auth',
-            'team-id': team_id,
-            'password': password
+            'team_id': self.factory.team_id,
+            'password': self.factory.password
         })
+        ######################################################################
         self.clientState = 'LOGGING-IN'
 
     #---------------COMMUNICATION METHODS-------------------------------------#
@@ -62,12 +60,18 @@ class TeamClientSideProtocol(NetstringReceiver):
 
     #-------------------------------------------------------------------------#
 
+    #######################TODO FOR TEAM###################################
+    # 2) Implement function to handle bidding logic.
+    #######################################################################
+
+    #######################################################################
+
     def startSimulation(self):
         '''
         Current drone SKD simulator call, which will add state data to our queue from a different
         thread.
         '''
-        for drone_id in range(NUM_DRONES):
+        for drone_id in range(av.NUM_DRONES):
             simulator = Simulator(self.droneStates, drone_id)
             t = threading.Thread(target=simulator.run, args=(self.factory.run_event, ))
             t.start()
@@ -79,32 +83,37 @@ class TeamClientSideProtocol(NetstringReceiver):
         Important method. Send drone state to main server every DRONE_UPDATE_INTERVAL seconds.
         We call reactor reactor.callLater() to recall the method on the set interval.
         '''
+        #######################TODO FOR TEAM###################################
+        # 1) Implement this function with actual drone information.
+        ######################################################################
         if self.droneStates:
             lastState = self.droneStates[-1]
             drone_id = '0' # TODO; 0 is just a placeholder
             self.writeToServer({
-                'type': 'drone-state',
-                'timestamp': datetime.datetime.now().timestamp(),
-                'states': [{
-                    'drone_id': 0,
-                    'type'    : lastState['type'],
+                'type': 'drone_state',
+                'drone_state': {
+                    'drone_id': lastState['drone_id'],
                     'longitude': lastState['longitude'],
                     'latitude': lastState['latitude'],
                     'altitude': lastState['altitude'],
                     'velocity': lastState['velocity'],
-                    'pax'     : lastState['pax'],
-                    'drone-state': lastState['drone-state']
-                }]
+                    'k_passengers': lastState['k_passengers'],
+                    'battery_left': lastState['battery_left'],
+                    'state': lastState['state'],
+                    'fulfilling': lastState['fulfilling'],
+                    'next_port': lastState['next_port']
+                }
             })
             self.droneStates.clear()
-        reactor.callLater(DRONE_UPDATE_INTERVAL, self.sendDroneState)
+        ######################################################################
+        reactor.callLater(av.DRONE_UPDATE_INTERVAL, self.sendDroneState)
 
 
 
 # Need factory so we can reconnect. Factory maintains should mantain persistent state.
 class TeamFactory(ReconnectingClientFactory):
 
-    def __init__(self):
+    def __init__(self, team_id, password):
         '''
         Initialize variables:
             threads: list of all threads that we start, so we can kill them if need be
@@ -112,6 +121,8 @@ class TeamFactory(ReconnectingClientFactory):
         '''
         self.threads = []
         self.run_event = threading.Event()
+        self.team_id = team_id
+        self.password = password
 
     #---------------TWISTED FACTORY METHODS----------------------------------#
 
@@ -160,9 +171,14 @@ def main():
     '''
     Main function: Connect to server and run the reactor. Standard for Twisted.
     '''
+    if len(sys.argv) != 3:
+        print('Syntax: {} <team_id> <password>'.format(sys.argv[0]))
+        sys.exit(0)
+
+    (team_id, password) = sys.argv[1:]
     host = 'localhost'
     port = 8007
-    reactor.connectTCP(host, port, TeamFactory())
+    reactor.connectTCP(host, port, TeamFactory(team_id, password))
     reactor.run()
 
 if __name__ == '__main__':

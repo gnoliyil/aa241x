@@ -74,17 +74,19 @@ class DBHandler:
             self.con.rollback()
 
     def query_one(self, query, args=()):
-        """Executes a query and returns the output one result."""
+        """Executes a query and returns (bool of success, output one result). """
         try:
             self.cur.execute(query, args)
             self.con.commit()
             if self.cur.description:
-                return self.cur.fetchone()
+                return self.cur.fetchone()[0]
         except pg.Error as e:
             print('Query failed. Rolling back connection. ERROR:', e)
             # resets cursor, otherwise any future executes will generate an InternalError
             self.con.rollback()
+            raise Exception(e)
 
+    # TODO update to return False on error like query_one
     def query_list(self, query, args=()):
         """Executes a query and returns the output as a list."""
         try:
@@ -126,6 +128,8 @@ class DBHandler:
             print('Failed to insert values into {}. Rolling back connection. ERROR:'.format(table), e)
             # resets cursor, otherwise any future executes will generate an InternalError
             self.con.rollback()
+        except Exception:
+            return False
 
     def update_values(self, table, condition, columns, values_tuple):
         """Update values of specified columns in table in all rows that satisfy the query condition.

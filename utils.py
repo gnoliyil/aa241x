@@ -1,5 +1,6 @@
 import re
 from allVars import *
+import team_utils as tu
 
 def matchIntResponse(query, response):
     return re.match('^' + query + '([0-9]+)\s*$', response)
@@ -18,3 +19,26 @@ def stateToString(state):
     for item in state:
         string += ' ' + str(item)
     return string
+
+def hasattrs(protocol, message, attrs):
+    for attr in attrs:
+        if not hasattr(protocol, message, attr):
+            return False
+    return True
+
+def hasattr(protocol, message, attr):
+    '''
+    Check if message has attribute. If not, then we write to team which attribute they are missing. If the team is unknown, we lose the connection.
+    '''
+    if attr not in message:
+        tu.writeToTeam(protocol, {
+            'type': 'response',
+            'result': 'error',
+            'msg': 'Missing attribuete: {}'.format(attr)
+        })
+        if protocol.factory.protocols[protocol] is None:
+            protocol.transport.loseConnection()
+        return False
+    return True
+
+# TODO: implement function to check if json keys match.

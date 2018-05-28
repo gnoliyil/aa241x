@@ -4,7 +4,7 @@ import time
 class Simulator():
     def __init__(self, droneStates, drone_id):
         '''
-        Simulator for drone data sender. We will need to change this when we learn about the SDK. 
+        Simulator for drone data sender. We will need to change this when we learn about the SDK.
         Initialize variables:
             duration: duration of simulation in seconds. Not really necessary?
             droneStates: queue of states to which we will add new states received from drone.
@@ -28,13 +28,17 @@ class Simulator():
 
             # TODO: consider using mutex if we change the way we edit the queue.
             self.droneStates.append({
-                'type': 'real',
+                'drone_id': self.drone_id,
+                'type'    : 'physical',
                 'longitude': x,
                 'latitude': y,
                 'altitude': z,
                 'velocity': [1, 2, 3],
-                'pax': [],
-                'drone-state': 'working'
+                'k_passengers': 2,
+                'battery_left': 97,
+                'state': 'working',
+                'fulfilling': None,
+                'next_port': None
             })
             x += 1
             y += 2
