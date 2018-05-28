@@ -135,14 +135,12 @@ class TeamFactory(ReconnectingClientFactory):
         '''
         print('Trying to connect.')
 
-
     def clientConnectionLost(self, connector, reason):
         '''
         Called when a client (in this case there is only one) loses connection to the server.
         '''
         print('Lost connection.  Reason:', reason)
         ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
-
 
     def clientConnectionFailed(self, connector, reason):
         '''

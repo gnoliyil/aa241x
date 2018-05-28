@@ -2,8 +2,6 @@ import csv
 import random
 import datetime
 
-# from .. import allVars as av
-
 class DemandGenerator():
 
     def __init__(self):
@@ -22,7 +20,7 @@ class DemandGenerator():
         '''
         # TODO: add randomness to interval times.
         with open(filename, 'w') as csvfile:
-            fieldnames = ['datetime', 'from_port', 'to_port', 'pax']
+            fieldnames = ['datetime', 'from_port', 'to_port', 'k_passengers']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
@@ -32,7 +30,7 @@ class DemandGenerator():
                     'datetime': self.start_datetime + datetime.timedelta(seconds=i*interval),
                     'from_port': ports[0],
                     'to_port': ports[1],
-                    'pax': self._get_pax()
+                    'k_passengers': self._get_pax()
                 }
                 writer.writerow(row)
 

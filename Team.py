@@ -32,9 +32,7 @@ class Team():
         '''
         with self.db:
             return self.db.query_one('SELECT is_logged_in FROM Teams WHERE team_id = %s;', (self.team_id,))
-            #if not query_result[0]:
-                #raise Exception(query_result[1])
-            return query_result[1]
+
 
     def logOut(self):
         '''

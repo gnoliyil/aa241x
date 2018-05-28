@@ -34,11 +34,9 @@ def hasattr(protocol, message, attr):
         tu.writeToTeam(protocol, {
             'type': 'response',
             'result': 'error',
-            'msg': 'Missing attribuete: {}'.format(attr)
+            'msg': 'Missing attribute: {}'.format(attr)
         })
         if protocol.factory.protocols[protocol] is None:
             protocol.transport.loseConnection()
         return False
     return True
-
-# TODO: implement function to check if json keys match.

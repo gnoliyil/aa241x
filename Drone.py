@@ -4,8 +4,6 @@ class Drone():
     def __init__(self, team_id, drone_id, db):
         self.drone_id = drone_id
         self.team_id = team_id
-        self.state = None  # State: (longitude, latitude, altitute) #TODO: update state tuple
-        self.lastUpdated = None
         self.db = db
         self.insertIntoDB()
 

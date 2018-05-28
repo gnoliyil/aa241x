@@ -1,4 +1,3 @@
-
 LOG_NAME = 'log.txt'
 LOGIN_TIMEOUT = 15  # in seconds
 

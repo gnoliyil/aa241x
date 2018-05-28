@@ -44,13 +44,13 @@ CREATE TABLE Request_States(
 
 CREATE TABLE Ports(
   port_id INTEGER PRIMARY KEY,
+	longitude VARCHAR(255),
   latitude VARCHAR(255),
-  longitude VARCHAR(255),
   altitude VARCHAR(255)
 );
 
 CREATE TABLE Requests(
-  request_id VARCHAR(255) PRIMARY KEY,
+  request_id SERIAL NOT NULL PRIMARY KEY,
   k_passengers INTEGER,
   time_requested TIMESTAMP,
   time_assigned TIMESTAMP,
@@ -78,7 +78,7 @@ CREATE TABLE Drone_States_History(
   battery_left FLOAT,
 	state VARCHAR(255),
   next_port INTEGER REFERENCES Ports(port_id),
-  fulfilling VARCHAR(255) REFERENCES Requests(request_id),
+  fulfilling INTEGER REFERENCES Requests(request_id),
   CONSTRAINT battery_check CHECK (battery_left >= 0 AND battery_left <= 100),
   CONSTRAINT k_passengers_check CHECK (k_passengers >= 0 AND k_passengers <= 4),
   FOREIGN KEY (team_id, drone_id) REFERENCES Drones(team_id, drone_id)
@@ -98,9 +98,7 @@ CREATE TABLE Bids(
   time_estimated_arrival TIMESTAMP,
   accepted BOOLEAN, /* rename */
   succeeded BOOLEAN,
-  team_id VARCHAR(255),
-  request_id VARCHAR(255),
-  CONSTRAINT price_check CHECK (price >= 0),
-  FOREIGN KEY (team_id) REFERENCES Teams(team_id),
-  FOREIGN KEY (request_id) REFERENCES Requests(request_id)
+  team_id VARCHAR(255) REFERENCES Teams(team_id),
+  request_id INTEGER REFERENCES Requests(request_id),
+  CONSTRAINT price_check CHECK (price >= 0)
 );

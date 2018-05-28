@@ -16,16 +16,14 @@ import log_utils as lu
 import message_utils as mu
 import attributes as atts
 import traceback
+import csv
 
 
 # TODO in order:
 # Finish bid broadcasting logic, add all requests to DB. Then use timestamps to set timers to send out bids. Make sure it works!
-# Add drone/fly state info to DB systematically.
 # Split logs per team. only print relevant stuff.
 # Incorporate drone COMMUNICATION
 # Make sure we can setup connection with other computer.
-
-# TODO: make sure all query_one s have correct new format.
 
 class TeamServerSideProtocol(NetstringReceiver):
 
@@ -59,7 +57,6 @@ class TeamServerSideProtocol(NetstringReceiver):
             'Connection lost. There are currently %d open connections.' % (self.factory.numProtocols,))
         self.factory.protocols[self] = None
 
-
     def stringReceived(self, line):
         '''
         Called when line/message is received from team. Always check 'type' to decide what to do. Call
@@ -91,19 +88,7 @@ class TeamServerSideProtocol(NetstringReceiver):
             else:
                 # Team is sending drone state information, accept it and store it.
                 if message['type'] == 'drone_state':
-
-                    # Make sure message has all needed fields.
-                    if not utils.hasattr(self, message, 'drone_state'): return
-                    new_drone_state = message['drone_state']
-                    if not utils.hasattrs(self, new_drone_state, atts.DRONE_STATE_ATTRS): return
-
-                    # Try to insert state into DB. Write back result to team.
-                    try:
-                        success = self.factory.teams[team_id].upateDroneState(new_drone_state['drone_id'], new_drone_state, datetime.now())
-                        if success:
-                            tu.writeToTeam(self, mu.THANKS_MSG)
-                    except Exception as e:
-                        tu.writeToTeam(self, mu.ERROR_RESPONSE('DB error. Make sure all fields are correct. Error: {}'.format(e))) # Send error
+                    self.updateDroneState(team_id, message)
 
                 # Team want to log out. Log them out.
                 elif message['type'] == 'logout':
@@ -119,6 +104,19 @@ class TeamServerSideProtocol(NetstringReceiver):
             lu.writeToLog(self.factory, '[ERROR] ' + str(e), verbose=False)
             print(traceback.format_exc())
 
+    def updateDroneState(self, team_id, message):
+        # Make sure message has all needed fields.
+        if not utils.hasattr(self, message, 'drone_state'): return
+        new_drone_state = message['drone_state']
+        if not utils.hasattrs(self, new_drone_state, atts.DRONE_STATE_ATTRS): return
+
+        # Try to insert state into DB. Write back result to team.
+        try:
+            success = self.factory.teams[team_id].upateDroneState(new_drone_state['drone_id'], new_drone_state, datetime.now())
+            if success:
+                tu.writeToTeam(self, mu.THANKS_MSG)
+        except Exception as e:
+            tu.writeToTeam(self, mu.ERROR_RESPONSE('DB error. Make sure all fields are correct. Error: {}'.format(e))) # Send error
 
 
 class MainFactory(ServerFactory):
@@ -151,7 +149,6 @@ class MainFactory(ServerFactory):
     # This will be used by the default buildProtocol to create new protocols:
     protocol = TeamServerSideProtocol
 
-    # Called when factory is initialized (put code other than variable initiation here)
     def startFactory(self):
         '''
         Called when factory starts running. Sets isRunning to true for logging. Opens files.
@@ -161,7 +158,6 @@ class MainFactory(ServerFactory):
         self.log = open(LOG_NAME, 'a')
         self.log.write('\nStarting new log: ' + str(datetime.now()) + '\n')
 
-    # Factory shutdown
     def stopFactory(self):
         '''
         Called when factory is shutting down. Set isRunning to false so we can log without errors, and closes opened files.
@@ -170,17 +166,18 @@ class MainFactory(ServerFactory):
         self.log.write('Stopping factory. \n')
         self.log.close()
 
-
     # -------------------------------------------------------------------------#
 
     def sendBidResults():
         # TODO: Implemnet this function. Send results to teams that did not win bid!
         self.sendTask(best_bid['team_id'], request_id)
+        pass
 
     def sendTask(self, team_id, request_id):
         '''
         Send task to team_id. Returns True if send was successful. Assumes team_id is valid.
         '''
+        # TODO: comment function, test it works.
         try:
             with self.db:
                 request  = self.db.query_one('SELECT * FROM requests WHERE request_id = %s', (request_id))
@@ -206,6 +203,7 @@ class MainFactory(ServerFactory):
             return False
 
     def broadcastRequest(self, request_id):
+        # TODO: comment function, test it works.
         try:
             with self.db:
                 # TODO: Makse sure we get the correct request which is determined by timestamp.
@@ -240,12 +238,11 @@ class MainFactory(ServerFactory):
             lu.writeToLog(self, '[ERROR] Failed broadcast requests. Error: ', e)
 
     def bidTimeOut(self, request_id):
+        # TODO: comment function, test it works.
         try:
             self.writeToLog("[BID TIMEOUT] [request_id = {}]".format(request_id))
             with self.db:
-                query_result = self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;', ('BID_COMPLETED', request_id))
-                if not query_result[0]:
-                    raise Exception(query_result[1])
+                self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;', ('BID_COMPLETED', request_id))
             self.collectBid(request_id)
         except Exception as e:
             lu.writeToLog(self, '[ERROR] Failed to update bid after timeout. Error: ', e)
@@ -255,6 +252,7 @@ class MainFactory(ServerFactory):
         return bids[0]
 
     def collectBid(self, request_id):
+        # TODO: comment function, test it works.
         # collect bids
         # finds the best bid
         with self.db:
@@ -277,42 +275,7 @@ class MainFactory(ServerFactory):
                                 .format(best_bid['bid_id'], best_bid['team_id'], request_id))
                 self.sendBidResults(best_bid['team_id'], request_id)
 
-
     # ---------------------------------------------------------------
-
-    # TODO: UPDATE THIS FUNCTION !!
-    def onReceiveDroneState(self, team_id, drone_states, timestamp = datetime.now()):
-        drone_ids = [state['drone_id'] for state in drone_states]
-        if len(set(drone_ids)) != len(drone_ids):
-            lu.writeToLog(self, "[ERROR DUPLICATED DRONES] [TEAM# {}]".format(team_id))
-            return
-
-        for state in drone_states:
-            state_kv = [
-                ('team_id', team_id),
-                ('drone_id', state['drone_id']),
-                ('time_stamp', timestamp),
-                ('battery_left', state['battery_left']),
-                ('k_passengers', state['k_passengers']),
-                ('latitude', state['latitude']),
-                ('longitude', state['longitude']),
-                ('altitude', state['altitude']),
-                ('velocity', state['velocity']),
-                ('from_port', state['from_port']),
-                ('to_port', state['to_port']),
-                ('fulfilling', state['fulfilling']),
-            ]
-            keys, values = zip(*state_kv)
-            with self.db:
-                try:
-                    record_id = self.db.insert_values('Drone_States_History', values, keys)['record_id']
-                except:
-                    lu.writeToLog(self, '[ERROR WRITING DRONE_STATES] [TEAM# {} DRONE# {}]'.format(team_id, state['drone_id']))
-                    return
-
-                self.db.query_one('UPDATE drone_states SET record_id = %s WHERE (team_id, drone_id) = (%s, %s);',
-                                  (record_id, team_id, state['drone_id']))
-
 
     def onReceiveTaskResponse(self, task_response):
         request_id = task_response['request_id']
@@ -374,7 +337,6 @@ def main():
     endpoint = TCP4ServerEndpoint(reactor, 8007)
     endpoint.listen(MainFactory())
     reactor.run()
-
 
 if __name__ == '__main__':
     main()
