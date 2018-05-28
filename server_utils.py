@@ -1,24 +1,4 @@
-import re
-from allVars import *
 import team_utils as tu
-
-def matchIntResponse(query, response):
-    return re.match('^' + query + '([0-9]+)\s*$', response)
-
-def matchExactString(query, string, response):
-    return re.match('^' + query + string + '\s*$', response)
-
-def matchDroneUpdate(response):
-    integer = '([0-9]+)'
-    decimal = '([0-9]+.?[0-9]*)'
-    # DRONE_UPDATE: <drone_id> <latitude> <longitude> <altitude>
-    return re.match('^' + DRONE_UPDATE + integer + '\s+' + decimal + '\s+' + decimal + '\s+' + decimal + '\s*$', response)
-
-def stateToString(state):
-    string = ''
-    for item in state:
-        string += ' ' + str(item)
-    return string
 
 def hasattrs(protocol, message, attrs):
     for attr in attrs:
@@ -40,3 +20,16 @@ def hasattr(protocol, message, attr):
             protocol.transport.loseConnection()
         return False
     return True
+
+def getNextRequest(db):
+    '''
+    Retrieve from DB request that has earliest time_requested and has state WAITING.
+    Returns that request or None.
+    '''
+    with db:
+        return db.query_one('SELECT *                                  \
+                                   FROM Requests                       \
+                                   WHERE time_requested =              \
+                                      (SELECT MIN(time_requested)      \
+                                       FROM Requests                   \
+                                       WHERE state = %s);', ('WAITING',))

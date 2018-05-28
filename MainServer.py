@@ -5,18 +5,18 @@ from twisted.internet import reactor
 from datetime import datetime
 from sys import stdout
 from Team import Team
-from allVars import *
-from serverVars import *
-from db import keys as k
-import utils
+from vars import *
 import json
 from db import DBHandler
 import team_utils as tu
 import log_utils as lu
-import message_utils as mu
+import message_templates as mt
 import attributes as atts
 import traceback
 import csv
+import server_utils as su
+from demand import DemandGenerator
+import keys as k
 
 
 # TODO in order:
@@ -66,13 +66,14 @@ class TeamServerSideProtocol(NetstringReceiver):
             # Get message and log it.
             team_id = self.factory.protocols[self]
             message = line.decode()
-            lu.writeToLogFromTeam(self.factory, message, team_id)  # TODO: Have a separate log for each team.
+
+            lu.writeToLogFromTeam(self.factory, message, team_id, verbose=True)  # TODO: Have a separate log for each team.
 
             # deserialize message
             message = json.loads(message)
 
             # Check if message has 'type' attribute
-            if not utils.hasattr(self, message, 'type'): return
+            if not su.hasattr(self, message, 'type'): return
 
             # Team Authentication
             if message['type'] == 'auth':
@@ -81,7 +82,7 @@ class TeamServerSideProtocol(NetstringReceiver):
 
             # Team is trying to send a message without our approval or before logging in.
             elif team_id is None or not self.factory.teams[team_id].isLoggedIn():
-                tu.writeToTeam(self, mu.PLEASE_LOGIN_MSG)
+                tu.writeToTeam(self, mt.PLEASE_LOGIN_MSG)
                 return
 
             # Team is logged in. We can accept data.
@@ -89,6 +90,7 @@ class TeamServerSideProtocol(NetstringReceiver):
                 # Team is sending drone state information, accept it and store it.
                 if message['type'] == 'drone_state':
                     self.updateDroneState(team_id, message)
+                    tu.writeToTeam(self, mt.THANKS_MSG)
 
                 # Team want to log out. Log them out.
                 elif message['type'] == 'logout':
@@ -101,22 +103,23 @@ class TeamServerSideProtocol(NetstringReceiver):
                     # TODO: implement
                     pass
         except Exception as e:
-            lu.writeToLog(self.factory, '[ERROR] ' + str(e), verbose=False)
+            lu.writeToLog(self.factory, '[ERROR] {}'.format(str(e)), verbose=False)
             print(traceback.format_exc())
 
     def updateDroneState(self, team_id, message):
         # Make sure message has all needed fields.
-        if not utils.hasattr(self, message, 'drone_state'): return
+        if not su.hasattr(self, message, 'drone_state'): return
         new_drone_state = message['drone_state']
-        if not utils.hasattrs(self, new_drone_state, atts.DRONE_STATE_ATTRS): return
+        if not su.hasattrs(self, new_drone_state, atts.DRONE_STATE_ATTRS): return
 
         # Try to insert state into DB. Write back result to team.
         try:
             success = self.factory.teams[team_id].upateDroneState(new_drone_state['drone_id'], new_drone_state, datetime.now())
             if success:
-                tu.writeToTeam(self, mu.THANKS_MSG)
+                tu.writeToTeam(self, mt.THANKS_MSG)
         except Exception as e:
-            tu.writeToTeam(self, mu.ERROR_RESPONSE('DB error. Make sure all fields are correct. Error: {}'.format(e))) # Send error
+            tu.writeToTeam(self, mt.ERROR_RESPONSE('DB error. Make sure all fields are correct. Error: {}'.format(e))) # Send error
+            print(traceback.format_exc())
 
 
 class MainFactory(ServerFactory):
@@ -128,12 +131,15 @@ class MainFactory(ServerFactory):
             protocols: maps { protocol: team_id }
             teams: maps { team: Team object }
             passwords: maps { team_id : password }
+            requestCallIds = { request_id : requestCallId }
         '''
         self.db = DBHandler(k.DB_NAME, k.DB_USER, k.DB_PASSWORD)
         self.numProtocols = 0
         self.protocols = {}
-        self.requestCallId = {}
+        self.requestCallIds = {}
         self._loadTeams()
+        self._loadRequests(self.db)
+        # TODO: create new demand file at the start of simulation, so we make sure that times are like we want them.
 
     def _loadTeams(self):
         '''
@@ -143,6 +149,19 @@ class MainFactory(ServerFactory):
             teams = self.db.query_list('SELECT * FROM Teams;')
             self.db.query_list('UPDATE Teams SET is_logged_in = FALSE;')  # reset all login states to logged out.
         self.teams = {team['team_id']: Team(team['team_id'], team['password'], self.db) for team in teams}
+
+    def _loadRequests(self, handler):
+        '''
+        Loads requests into DB from demand.csv file
+        '''
+        with open('./demand/demand.csv', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            with handler:
+                handler.query_one('DELETE From Requests;')
+                for row in reader:
+                    handler.query_one('INSERT INTO Requests(k_passengers,from_port,to_port,time_requested, state)  \
+                                       VALUES (%s,%s,%s,%s,%s);', (row['k_passengers'],row['from_port'],
+                                       row['to_port'],row['datetime'], 'WAITING'))
 
     # ---------------TWISTED FACTORY METHODS----------------------------------#
 
@@ -157,6 +176,7 @@ class MainFactory(ServerFactory):
         self.isRunning = True
         self.log = open(LOG_NAME, 'a')
         self.log.write('\nStarting new log: ' + str(datetime.now()) + '\n')
+        self.startNextBroadcastTimer()
 
     def stopFactory(self):
         '''
@@ -199,53 +219,66 @@ class MainFactory(ServerFactory):
             }
             return tu.writeToTeam(teams[team_id].protocol, task_generated)
         except Exception as e:
-            lu.writeToLog(self, '[ERROR] Failed to send task. Error: ', e)
+            lu.writeToLog(self, '[ERROR] Failed to send task. Error: {}'.format(str(e)))
+            print(traceback.format_exc())
             return False
 
-    def broadcastRequest(self, request_id):
-        # TODO: comment function, test it works.
+    def startNextBroadcastTimer(self):
         try:
-            with self.db:
-                # TODO: Makse sure we get the correct request which is determined by timestamp.
-                request = self.db.query_one('SELECT * FROM requests WHERE request_id = %s', (request_id))
+            # Retrieve request.
+            # TODO: Makse sure we get the correct request which is determined by timestamp.
+            request = su.getNextRequest(self.db)
+
             if request is None:
-                raise Exception('[ERROR] Not exist [REQ# {}]'.format(request_id))
+                lu.writeToLog(self, 'No WAITING requests left.')
+                return
 
-            request_generated = {
-                'type': 'request',
-                'request': {
-                    'request_id': request['request_id'],
-                    'k_passengers': request['k_passengers'],
-                    'time_requested': request['time_requested'],
-                    'time_expected': request['time_expected'],
-                    'price_expected': request['price_expected'],
-                    'from_port': request['from_port'],
-                    'to_port': request['to_port'],
-                }
-            }
+            # Start timer (by use of callback)
+            time_til_broadcast = (request['time_requested'] - datetime.now()).seconds
+            lu.writeToLog(self, 'Time until next broadcast: {}'.format(time_til_broadcast))
+            reactor.callLater(time_til_broadcast, self.broadcastNextRequest, (request))
 
-            # team connected
-            for protocol in self.factory.protocols:
-                tu.writeToTeam(protocol, request_generated)
-            callId = reactor.callLater(REQUEST_TIMEOUT, self.bidTimeOut, (request['request_id'],))
-            self.requestCallId[request['request_id']] = callId
-            with self.db:
-                query_result = self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;',
-                                  ('REQUEST_SENT', request['request_id']))
-                if not query_result[0]:
-                    raise Exception(query_result[1])
         except Exception as e:
-            lu.writeToLog(self, '[ERROR] Failed broadcast requests. Error: ', e)
+            lu.writeToLog(self, '[ERROR] Failed at broadcastTimer. Error: {}'.format(str(e)))
+            print(traceback.format_exc())
+
+    def broadcastNextRequest(self, request):
+        # TODO: comment function, test it works.
+        '''
+        Query request from DB and set a timer to broadcast the given request at the
+        time specified in the request.
+        '''
+        try:
+            # Create request message for broadcast.
+            request_msg = mt.REQUEST_MSG(request)
+
+            # Send to all teams that are logged in and set timeout.
+            for protocol in self.protocols:
+                tu.writeToTeam(protocol, request_msg)
+            callId = reactor.callLater(REQUEST_TIMEOUT, self.bidTimeOut, request['request_id'])
+            self.requestCallIds[request['request_id']] = callId
+
+            # Update request state to sent.
+            with self.db:
+                self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;',
+                                  ('SENT', request['request_id']))
+
+            self.startNextBroadcastTimer()
+
+        except Exception as e:
+            lu.writeToLog(self, '[ERROR] Failed broadcast requests. Error: {}'.format(str(e)))
+            print(traceback.format_exc())
 
     def bidTimeOut(self, request_id):
         # TODO: comment function, test it works.
         try:
-            self.writeToLog("[BID TIMEOUT] [request_id = {}]".format(request_id))
+            lu.writeToLog(self, "[BID TIMEOUT] [request_id = {}]".format(request_id))
             with self.db:
-                self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;', ('BID_COMPLETED', request_id))
-            self.collectBid(request_id)
+                self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;', ('TIMEOUT_DONE', request_id))
+            # self.collectBid(request_id) TODO uncomment
         except Exception as e:
-            lu.writeToLog(self, '[ERROR] Failed to update bid after timeout. Error: ', e)
+            lu.writeToLog(self, '[ERROR] Failed to update bid after timeout. Error: {}'.format(str(e)))
+            print(traceback.format_exc())
 
     def selectBestBid(self, request_id, bids):
         # dummy function now TODO implement
@@ -324,7 +357,7 @@ class MainFactory(ServerFactory):
                     self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s; ',
                                       ('BID_COMPLETED', request_id))
                     lu.writeToLog(self,"[RECEIVING ALL BIDS] for [REQ# {}]".format(request_id))
-                    self.requestCallId[request_id].cancel()
+                    self.requestCallIds[request_id].cancel()
                     lu.writeToLog(self,"[TIMEOUT CALLBACK CANCELLED] for [REQ# {}]".format(request_id))
 
                     self.collectBid(request_id)  # process all bids
@@ -334,6 +367,8 @@ class MainFactory(ServerFactory):
 
 # 8007 is the port you want to run under. Choose something >1024
 def main():
+    DemandGenerator(start_delay=10).generate_file(filename='./demand/demand.csv') # Generate demand file using current time # TODO: check why this is not working
+
     endpoint = TCP4ServerEndpoint(reactor, 8007)
     endpoint.listen(MainFactory())
     reactor.run()

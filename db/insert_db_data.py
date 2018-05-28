@@ -3,6 +3,8 @@ from psycopg2 import sql
 import keys as k
 import csv
 
+# TODO: chaneg from query_one to insert_values...
+
 def _loadPorts(handler):
     '''
     Loads port info into DB.
@@ -13,17 +15,18 @@ def _loadPorts(handler):
             handler.query_one('INSERT INTO Ports(port_id,longitude,latitude,altitude)  \
                                VALUES (%s,%s,%s,%s);', (i, 1,2,3))
 
-def _loadRequests(handler):
+def _loadRequestStates(handler):
     '''
-    Loads requests into DB from demand.csv file
+    Load possible request states into DB.
     '''
-    with open('../demand/demand.csv', newline='') as csvfile:
-        reader = csv.DictReader(csvfile)
-        with handler:
-            for row in reader:
-                handler.query_one('INSERT INTO Requests(k_passengers,from_port,to_port,time_requested)  \
-                                   VALUES (%s,%s,%s,%s);', (row['k_passengers'],row['from_port'],
-                                   row['to_port'],row['datetime']))
+    with handler:
+        handler.insert_values('Request_States', ('WAITING', 'Request has not been sent yet.'))
+        handler.insert_values('Request_States', ('SENT', 'Request has been sent to teams.'))
+        handler.insert_values('Request_States', ('TIMEOUT_DONE', 'Request has been sent to teams, and timeout is done. Next step is to check if teams accepted.'))
+        handler.insert_values('Request_States', ('ACCEPTED', 'Request has been accepted by at least one team and assigned.'))
+        handler.insert_values('Request_States', ('DONE', 'Team that accepted finished the taks successfully'))
+        handler.insert_values('Request_States', ('FAILED', 'Team that accepted failed to finish the task'))
+
 
 def _loadTeams(handler):
     '''
@@ -38,14 +41,15 @@ def _loadTeams(handler):
 def main():
     handler = DBHandler(k.DB_NAME, k.DB_USER, k.DB_PASSWORD)
     with handler:
+        handler.query_one('DELETE From Drone_States_History;')
+        handler.query_one('DELETE From Requests;')
+        handler.query_one('DELETE From Request_States;')
         handler.query_one('DELETE From Drones;')
         handler.query_one('DELETE From Teams;')
-        handler.query_one('DELETE From Requests;')
         handler.query_one('DELETE From Ports;')
+    _loadRequestStates(handler)
     _loadTeams(handler)
     _loadPorts(handler)
-    _loadRequests(handler)
-
 
 
 if __name__ == '__main__':

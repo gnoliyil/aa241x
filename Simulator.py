@@ -29,7 +29,7 @@ class Simulator():
             # TODO: consider using mutex if we change the way we edit the queue.
 
             # NOTE: Use a similar function for when you are using real drones. Simply append the states to
-            # the queue, and team server will handle the communication. 
+            # the queue, and team server will handle the communication.
             self.droneStates.append({
                 'drone_id': self.drone_id,
                 'type'    : 'physical',

@@ -1,10 +1,10 @@
 from twisted.internet import reactor, defer
 from twisted.protocols.basic import LineReceiver, NetstringReceiver
 from twisted.internet.protocol import Protocol, ReconnectingClientFactory, ProcessProtocol
-import allVars as av
-import threading, utils, datetime, json, sys
+import team_vars as tv
+import threading, datetime, json, sys
 
-from stateSimulator import Simulator  # TODO: delete when we stop using simulator.
+from Simulator import Simulator  # TODO: delete when we stop using simulator.
 
 
 class TeamClientSideProtocol(NetstringReceiver):
@@ -20,7 +20,7 @@ class TeamClientSideProtocol(NetstringReceiver):
         Called when we receive a line/message from the main server.
         '''
         message = json.loads(line.decode())
-        print('[SERVER] ', message)
+        print('[FROM SERVER] ', message)
 
         if message['type'] == 'response':
             if self.clientState == 'LOGGING-IN':
@@ -28,8 +28,6 @@ class TeamClientSideProtocol(NetstringReceiver):
                     self.clientState = 'LOGGED-IN'
                     self.startSimulation()
                     self.sendDroneState()
-                else:
-                    self.connectionLost()
 
 
     def connectionMade(self):
@@ -37,16 +35,11 @@ class TeamClientSideProtocol(NetstringReceiver):
         Called when a connection with the main server has been established. Tries to log in to the server.
         '''
         print('Connection with SERVER established.')
-        # TODO: change to config file later
-        #######################TODO FOR TEAM###################################
-        # Please update this with your team_id and password.
-        ######################################################################
         self.writeToServer({
             'type': 'auth',
             'team_id': self.factory.team_id,
             'password': self.factory.password
         })
-        ######################################################################
         self.clientState = 'LOGGING-IN'
 
     #---------------COMMUNICATION METHODS-------------------------------------#
@@ -71,7 +64,7 @@ class TeamClientSideProtocol(NetstringReceiver):
         Current drone SKD simulator call, which will add state data to our queue from a different
         thread.
         '''
-        for drone_id in range(av.NUM_DRONES):
+        for drone_id in range(tv.NUM_DRONES):
             simulator = Simulator(self.droneStates, drone_id)
             t = threading.Thread(target=simulator.run, args=(self.factory.run_event, ))
             t.start()
@@ -106,7 +99,7 @@ class TeamClientSideProtocol(NetstringReceiver):
             })
             self.droneStates.clear()
         ######################################################################
-        reactor.callLater(av.DRONE_UPDATE_INTERVAL, self.sendDroneState)
+        reactor.callLater(tv.DRONE_UPDATE_INTERVAL, self.sendDroneState)
 
 
 

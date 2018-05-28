@@ -4,14 +4,15 @@ import datetime
 
 class DemandGenerator():
 
-    def __init__(self):
+    def __init__(self, start_delay=15):
         # self.max_passengers = av.MAX_PASSENGERS  TODO: Figure out how to import allVars, or work around it to get MAX_PASSENGERS
         self.max_passengers = 4
         # self.ports = [i for i in range(av.NUM_PORTS)]
         self.ports = [i for i in range(5)]  # TODO: same here
+        self.start_delay = start_delay
         self.start_datetime = self._get_start_datetime()
 
-    def generate_file(self, filename='demand.csv', k_rows=20, interval=10):
+    def generate_file(self, filename='demand.csv', k_rows=20, interval=20):
         '''
         Generate a csv file for the demand.
         Filename: must end in .csv
@@ -41,8 +42,9 @@ class DemandGenerator():
         return(random.sample(self.ports, 2))
 
     def _get_start_datetime(self):
-        today = datetime.datetime.today()
-        start_datetime = datetime.datetime(today.year, today.month, today.day, hour=15, minute=0, second=0)
+        #today = datetime.datetime.today()
+        #start_datetime = datetime.datetime(today.year, today.month, today.day, hour=15, minute=0, second=0)
+        start_datetime = datetime.datetime.now() + datetime.timedelta(seconds=self.start_delay)
         return start_datetime
 
 def main():

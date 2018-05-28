@@ -2,4 +2,5 @@ __pycache__
 db/__pycache__
 .DS_Store
 db/keys.py
+keys.py
 log.txt

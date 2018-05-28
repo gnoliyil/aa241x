@@ -79,7 +79,7 @@ class DBHandler:
             self.cur.execute(query, args)
             self.con.commit()
             if self.cur.description:
-                return self.cur.fetchone()[0]
+                return self.cur.fetchone()
         except pg.Error as e:
             print('Query failed. Rolling back connection. ERROR:', e)
             # resets cursor, otherwise any future executes will generate an InternalError
@@ -119,7 +119,6 @@ class DBHandler:
             sql = SQL('INSERT INTO {}({}) VALUES({}) RETURNING *'.format(table, str_identifiers, values_format)).format(*identifiers)
 
         try:
-            print(sql)
             self.cur.execute(sql, values_tuple)
             self.con.commit()
             if self.cur.description:

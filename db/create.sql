@@ -36,7 +36,7 @@ CREATE TABLE Fly_States(
   description TEXT
 );
 
--- TODO: Define possible request states, and load them automatically to DB.
+-- WAITING, SENT, TIMEOUT_DONE, ACCEPTED, DONE, FAILED
 CREATE TABLE Request_States(
   state VARCHAR(255) PRIMARY KEY,
   description TEXT
@@ -49,6 +49,8 @@ CREATE TABLE Ports(
   altitude VARCHAR(255)
 );
 
+
+-- TODO: add sent_to column
 CREATE TABLE Requests(
   request_id SERIAL NOT NULL PRIMARY KEY,
   k_passengers INTEGER,

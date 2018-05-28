@@ -1,6 +1,5 @@
 from Drone import Drone
-from allVars import *
-
+from vars import *
 
 class Team():
     '''
@@ -31,7 +30,9 @@ class Team():
         Returns True is team is logged in.
         '''
         with self.db:
-            return self.db.query_one('SELECT is_logged_in FROM Teams WHERE team_id = %s;', (self.team_id,))
+            result = self.db.query_one('SELECT is_logged_in FROM Teams WHERE team_id = %s;', (self.team_id,))
+            if result is not None:
+                return result[0]
 
 
     def logOut(self):

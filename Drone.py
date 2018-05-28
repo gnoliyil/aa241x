@@ -14,9 +14,14 @@ class Drone():
         '''
         is_physical = True if self.drone_id == 0 else False
         with self.db:
-            in_db = self.db.query_one('SELECT COUNT(*) FROM Drones  \
+            result = self.db.query_one('SELECT COUNT(*) FROM Drones  \
                                       WHERE team_id = %s AND drone_id = %s;',
                                       (self.team_id, self.drone_id))
+            if result is not None:
+                in_db = result[0]
+            else:
+                raise Exception('Query failed while inserting drone into DB.')
+
             if not in_db:
                 self.db.query_one('INSERT INTO Drones VALUES (%s, %s, %s);',
                               (self.team_id, self.drone_id, is_physical))
@@ -26,7 +31,7 @@ class Drone():
         Insert new state into database. Return true if success.
         '''
         with self.db:
-            success =  self.db.query_one('INSERT INTO Drone_States_History (team_id,drone_id, \
+            self.db.query_one('INSERT INTO Drone_States_History (team_id,drone_id, \
             	               time_stamp,longitude,latitude,altitude,velocity,k_passengers,\
                                 battery_left,state,next_port,fulfilling)  \
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);',
