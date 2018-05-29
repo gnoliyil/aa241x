@@ -5,7 +5,9 @@ def writeToLog(factory, message, verbose=True):
     Prints message to output and writes message to log.
     '''
     if factory.isRunning:
-        if verbose: print('[SERVER] ' + message)
+        if verbose:
+            print('[SERVER] ' + message)
+            print()
         factory.log.write('[SERVER] ' + message + '\n')
 
 def writeToLogFromTeam(factory, message, team_id, verbose=True):
@@ -19,6 +21,8 @@ def writeToLogFromTeam(factory, message, team_id, verbose=True):
         else:
             if verbose: print('[TEAM ' + team_id + '] ' + message)
             factory.log.write('[TEAM ' + team_id + '] ' + message + '\n')
+        if verbose:
+            print()
 
 def writeToLogToTeam(factory, message, team_id, verbose=True):
     '''
@@ -31,3 +35,5 @@ def writeToLogToTeam(factory, message, team_id, verbose=True):
         else:
             if verbose: print('[SERVER TO TEAM ' + team_id + '] ' + message)
             factory.log.write('[SERVER TO TEAM ' + team_id + '] ' + message + '\n')
+        if verbose:
+            print()

@@ -18,14 +18,15 @@ def denyTeam(protocol, reason):
     })
     protocol.transport.loseConnection()
 
-def writeToTeam(protocol, message):
+def writeToTeam(protocol, message, verbose=True):
     '''
     Writes to the team assigned to this protocol, and logs the message.
     :param dict message
     '''
     try:
         team_id = protocol.factory.protocols[protocol]
-        lu.writeToLogToTeam(protocol.factory, json.dumps(message), team_id)
+        print(team_id)
+        lu.writeToLogToTeam(protocol.factory, json.dumps(message), team_id, verbose)
         protocol.sendString(json.dumps(message).encode())
         return True
     except:

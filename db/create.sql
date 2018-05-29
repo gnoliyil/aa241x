@@ -52,16 +52,16 @@ CREATE TABLE Ports(
 CREATE TABLE Requests(
   request_id SERIAL NOT NULL PRIMARY KEY,
 	sent_to INTEGER,  -- number of teams the request was sent to.
-  k_passengers INTEGER,
-  time_requested TIMESTAMP,
-  time_assigned TIMESTAMP,
-  time_completed TIMESTAMP,
-  time_expected TIMESTAMP, -- time we expect bid to finish at.
-  expected_price FLOAT,
+  k_passengers INTEGER,      -- Number of passengers
+  time_requested TIMESTAMP,  -- time at which we send the reqeust (listed in the csv file)
+  time_assigned TIMESTAMP,   -- time we sent the task to the team.
+  time_completed TIMESTAMP,  -- time team completes the task, if state is 'DONE'
+  time_expected TIMESTAMP,   -- time we expect bid to finish at.
+  expected_price FLOAT,      -- Average price for bid of this type.
   price_f_slope FLOAT,
-  state VARCHAR(255) REFERENCES Request_States(state),
-  from_port INTEGER REFERENCES Ports(port_id),
-  to_port INTEGER REFERENCES Ports(port_id),
+  state VARCHAR(255) REFERENCES Request_States(state), -- See options in Request_States
+  from_port INTEGER REFERENCES Ports(port_id),  -- Pickup Port
+  to_port INTEGER REFERENCES Ports(port_id),    -- Delivery Port
   CONSTRAINT k_passengers_check CHECK (k_passengers >= 0 AND k_passengers <= 4)
 );
 

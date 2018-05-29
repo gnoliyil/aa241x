@@ -104,7 +104,7 @@ class TeamClientSideProtocol(NetstringReceiver):
         '''
         request_id = request['request_id']
         k_passengers = request['k_passengers']
-        expected_price = request['expected_price']
+        price_expected = request['expected_price']
         from_port = request['from_port']
         to_port = request['to_port']
         #######################TODO FOR TEAM###################################
@@ -117,7 +117,7 @@ class TeamClientSideProtocol(NetstringReceiver):
         if wantToBid:
             drone_id = 0            # TODO: decide what drone to use
             seconds_expected = 120     # TODO: Calculate expected time of trip, in seconds.
-            price = expected_price  # TODO: decide your price.
+            price = price_expected  # TODO: decide your price.
         ######################################################################
         if wantToBid:
             message = { 'type': 'bid',
@@ -154,7 +154,8 @@ class TeamClientSideProtocol(NetstringReceiver):
         # Once you start writing this you can comment out all the simulation
         # code, but make sure you have it as a reference.
         ######################################################################
-        self.startSimulation()
+        # self.startSimulation() # TODO uncomment to see simulation functionality
+        pass
         ######################################################################
 
 

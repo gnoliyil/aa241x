@@ -28,3 +28,24 @@ def REQUEST_MSG(request):
             'to_port': request['to_port'],
         }
     }
+
+def WINNING_BID_RESULT(request, bid, time_expected):
+    return {
+        'type': 'bid_result',
+        'result': 'win',
+        'request_id': request['request_id'],
+        'task': {
+           'k_passengers': request['k_passengers'],
+           'time_expected': time_expected,
+           'price': bid['price'],
+           'from_port': request['from_port'],
+           'to_port': request['to_port']
+        }
+    }
+
+def LOSING_BID_RESULT(request):
+    return {
+        'type': 'bid_result',
+        'result': 'lose',
+        'request_id': request['request_id']
+    }
