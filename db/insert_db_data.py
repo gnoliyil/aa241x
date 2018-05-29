@@ -22,6 +22,7 @@ def _loadRequestStates(handler):
     with handler:
         handler.insert_values('Request_States', ('WAITING', 'Request has not been sent yet.'))
         handler.insert_values('Request_States', ('SENT', 'Request has been sent to teams.'))
+        handler.insert_values('Request_States', ('NOT_SENT', 'Server was down when time of request happened.'))
         handler.insert_values('Request_States', ('NOT_ACCEPTED', 'Request has been sent to teams, and timeout is done, and no one sumitted a bid.'))
         handler.insert_values('Request_States', ('ACCEPTED', 'Request has been accepted by at least one team and assigned.'))
         handler.insert_values('Request_States', ('ALL_ACCEPTED', 'Request has been accepted by all teams.'))

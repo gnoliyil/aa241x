@@ -5,7 +5,7 @@ from twisted.internet import reactor
 from sys import stdout
 from Team import Team
 from vars import *
-import json, datetime, traceback, csv
+import json, datetime, traceback
 from db import DBHandler
 import team_utils as tu
 import log_utils as lu
@@ -52,9 +52,9 @@ class TeamServerSideProtocol(NetstringReceiver):
 
         # Lower number of protocols.
         self.factory.numProtocols -= 1
+        del self.factory.protocols[self]
         lu.writeToLog(self.factory,
             'Connection lost. There are currently %d open connections.' % (self.factory.numProtocols,))
-        self.factory.protocols[self] = None
 
     def stringReceived(self, line):
         '''
@@ -202,8 +202,6 @@ class MainFactory(ServerFactory):
         self.protocols = {}
         self.requestCallIds = {}
         self._loadTeams()
-        self._loadRequests(self.db)
-        # TODO: create new demand file at the start of simulation, so we make sure that times are like we want them.
 
     def _loadTeams(self):
         '''
@@ -213,20 +211,6 @@ class MainFactory(ServerFactory):
             teams = self.db.query_list('SELECT * FROM Teams;')
             self.db.query_list('UPDATE Teams SET is_logged_in = FALSE;')  # reset all login states to logged out.
         self.teams = {team['team_id']: Team(team['team_id'], team['password'], self.db) for team in teams}
-
-    def _loadRequests(self, handler):
-        '''
-        Loads requests into DB from demand.csv file
-        '''
-        with open('./demand/demand.csv', newline='') as csvfile:
-            reader = csv.DictReader(csvfile)
-            with handler:
-                handler.query_one('DELETE From Bids;')
-                handler.query_one('DELETE From Requests;')
-                for row in reader:
-                    handler.query_one('INSERT INTO Requests(k_passengers,sent_to,expected_price,from_port,to_port,time_requested,state)  \
-                                       VALUES (%s,%s,%s,%s,%s,%s,%s);', (row['k_passengers'],0,row['expected_price'],row['from_port'],
-                                       row['to_port'],row['datetime'],'WAITING'))
 
     # ---------------TWISTED FACTORY METHODS----------------------------------#
 
@@ -256,7 +240,7 @@ class MainFactory(ServerFactory):
     def startNextBroadcastTimer(self):
         try:
             # Retrieve request.
-            request = su.getNextRequest(self.db)
+            request = su.getNextRequest(self, self.db)
 
             if request is None:
                 lu.writeToLog(self, 'No WAITING requests left.')
@@ -331,7 +315,6 @@ class MainFactory(ServerFactory):
         # dummy function now TODO implement once we know how to calculate the best bid.
         return bids[0]
 
-    # TODO: next function to implement and test!
     def sendBidResults(self, request_id):
         '''
         Collects bids for REQ# request_id and figures out what is the best bid.
@@ -353,17 +336,13 @@ class MainFactory(ServerFactory):
             # Send result to winning bid
             best_bid = self.selectBestBid(bids_accepted)
             bid_winning_team = best_bid['team_id']
-            print('WINNING: ', bid_winning_team)
             now = datetime.datetime.now()
             time_expected = now + datetime.timedelta(seconds=best_bid['seconds_expected'])
             with self.db:
                 self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;', ('ASSIGNED', request_id))
                 self.db.query_one('UPDATE Requests SET time_assigned = %s WHERE request_id = %s;', (now, request_id))
                 self.db.query_one('UPDATE Requests SET time_expected = %s WHERE request_id = %s;', (time_expected, request_id))
-
-            print(self.teams[bid_winning_team])
-            print(self.teams[bid_winning_team].protocol)
-            tu.writeToTeam(self.teams[bid_winning_team].protocol, mt.WINNING_BID_RESULT(request, best_bid, time_expected))
+            tu.writeToTeam(self.teams[bid_winning_team].protocol, mt.WINNING_BID_RESULT(request, best_bid, str(time_expected)))
 
             # Send result to losing teams
             bid_losing_teams = [bid['team_id'] for bid in bids_accepted if bid['team_id'] != bid_winning_team]

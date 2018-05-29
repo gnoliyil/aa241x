@@ -35,5 +35,4 @@ def writeToLogToTeam(factory, message, team_id, verbose=True):
         else:
             if verbose: print('[SERVER TO TEAM ' + team_id + '] ' + message)
             factory.log.write('[SERVER TO TEAM ' + team_id + '] ' + message + '\n')
-        if verbose:
-            print()
+        if verbose: print()

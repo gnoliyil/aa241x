@@ -1,4 +1,6 @@
 import team_utils as tu
+import datetime
+import log_utils as lu
 
 def hasattrs(protocol, message, attrs):
     for attr in attrs:
@@ -21,15 +23,28 @@ def hasattr(protocol, message, attr):
         return False
     return True
 
-def getNextRequest(db):
+def getNextRequest(factory, db):
     '''
     Retrieve from DB request that has earliest time_requested and has state WAITING.
     Returns that request or None.
     '''
-    with db:
-        return db.query_one('SELECT *                                  \
-                                   FROM Requests                       \
-                                   WHERE time_requested =              \
-                                      (SELECT MIN(time_requested)      \
-                                       FROM Requests                   \
-                                       WHERE state = %s);', ('WAITING',))
+    while True:
+        with db:
+            request =  db.query_one('SELECT *                                  \
+                                       FROM Requests                       \
+                                       WHERE time_requested =              \
+                                          (SELECT MIN(time_requested)      \
+                                           FROM Requests                   \
+                                           WHERE state = %s);', ('WAITING',))
+        if request is None:
+            return None
+
+        # Check if the time_requested already passed
+        if request['time_requested'] < datetime.datetime.now():
+            with db:
+                db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;',
+                                  ('NOT_SENT', request['request_id']))
+            lu.writeToLog(factory, 'REQ# {} missed. New state: NOT SENT.')
+
+        else:
+            return request

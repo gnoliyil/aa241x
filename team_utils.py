@@ -25,8 +25,7 @@ def writeToTeam(protocol, message, verbose=True):
     '''
     try:
         team_id = protocol.factory.protocols[protocol]
-        print(team_id)
-        lu.writeToLogToTeam(protocol.factory, json.dumps(message), team_id, verbose)
+        lu.writeToLogToTeam(protocol.factory, json.dumps(message), team_id, verbose=verbose)
         protocol.sendString(json.dumps(message).encode())
         return True
     except:

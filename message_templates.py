@@ -39,7 +39,7 @@ def WINNING_BID_RESULT(request, bid, time_expected):
            'time_expected': time_expected,
            'price': bid['price'],
            'from_port': request['from_port'],
-           'to_port': request['to_port']
+           'to_port': request['to_port'],
         }
     }
 
