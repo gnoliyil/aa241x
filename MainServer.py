@@ -2,17 +2,27 @@ from twisted.internet.protocol import ServerFactory
 from twisted.protocols.basic import LineReceiver, NetstringReceiver
 from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.internet import reactor
-from datetime import datetime
 from sys import stdout
 from Team import Team
-from allVars import *
-from serverVars import *
-from keys import *
-import utils
-import json
-from threading import Timer
+from vars import *
+import json, datetime, traceback
 from db import DBHandler
+import team_utils as tu
+import log_utils as lu
+import message_templates as mt
+import attributes as atts
+import server_utils as su
+from demand import DemandGenerator
+import keys as k
 
+
+# TODO in order:
+# Finish bid broadcasting logic, add all requests to DB. Then use timestamps to set timers to send out bids. Make sure it works!
+# Split logs per team. only print relevant stuff.
+# Incorporate drone COMMUNICATION
+# Make sure we can setup connection with other computer.
+# Consider sendind FAILED requests again after all WAITING ones have been sent.
+# TODO: check if when a team submits a bid, their drone is not being considered for another bid.
 
 class TeamServerSideProtocol(NetstringReceiver):
 
@@ -26,61 +36,11 @@ class TeamServerSideProtocol(NetstringReceiver):
         '''
         self.db = self.factory.db
 
+        # Remember we work with protocols. Every protocol is a connection
         self.factory.protocols[self] = None
         self.factory.numProtocols += 1
-        self.factory.writeToLog(
+        lu.writeToLog(self.factory,
             'Connection made. There are currently %d open connections.' % (self.factory.numProtocols,))
-
-    def stringReceived(self, line):
-        '''
-        Called when line/message is received from team. We usually check the start of the line to decide what to do.
-        '''
-
-        # Get message and log it.
-        team_id = self.factory.protocols[self]
-        message = line.decode()
-        self.factory.writeToLogFromTeam(message, team_id)
-
-        # deserialize message
-        message = json.loads(message)
-
-        # Team Authentication
-        if message['type'] == 'auth':
-            team_id = self.processAuthentication(message)
-
-        # Team is trying to send a message without our approval.
-        elif team_id is None or not self.factory.teams[team_id].isLoggedIn():
-            self.writeToTeam({
-                'type': 'response',
-                'result': 'error',
-                'msg': 'Please login first.'
-            })
-
-        # Team is logged in. We can accept data.
-        else:
-            # Team is sending drone state information, accept it and store it.
-            # TODO: try-catch if info is formatted wrongfully or incomplete
-            if message['type'] == 'drone-state':
-                timestamp = message['timestamp']
-                for state in message['states']:
-                    drone_id = state['drone_id']
-                    self.factory.teams[team_id].upateDroneState(drone_id, state, timestamp)
-                self.writeToTeam({
-                    'type': 'response',
-                    'result': 'success'
-                })
-            elif message['type'] == 'logout':
-                self.factory.logOutTeam()
-                self.writeToTeam({
-                    'type': 'response',
-                    'result': 'success'
-                })
-            elif message['type'] == 'bid-response':
-                # TODO: implement
-                pass
-            elif message['type'] == 'task-response':
-                # TODO: implement
-                pass
 
     def connectionLost(self, reason):
         '''
@@ -88,62 +48,143 @@ class TeamServerSideProtocol(NetstringReceiver):
         '''
         # Log out team.
         team_id = self.factory.protocols[self]
-        self.factory.logOutTeam(self, team_id)
+        tu.logOutTeam(self.factory, team_id)
 
         # Lower number of protocols.
         self.factory.numProtocols -= 1
-        self.factory.writeToLog(
+        del self.factory.protocols[self]
+        lu.writeToLog(self.factory,
             'Connection lost. There are currently %d open connections.' % (self.factory.numProtocols,))
-        self.factory.protocols[self] = None
 
-    # -------------------------------------------------------------------------#
-
-    def denyTeam(self, reason):
+    def stringReceived(self, line):
         '''
-        Close connection with user for given reason
+        Called when line/message is received from team. Always check 'type' to decide what to do. Call
+        methods from here but implement in MainFactory.
         '''
-        self.writeToTeam({
-            'type': 'response',
-            'result': 'error',
-            'msg': reason
-        })
-        self.transport.loseConnection()
+        try:
+            # Get message and log it.
+            team_id = self.factory.protocols[self]
+            message = line.decode()
 
-    def writeToTeam(self, message):
+            lu.writeToLogFromTeam(self.factory, message, team_id, verbose=True)  # TODO: Have a separate log for each team.
+
+            # deserialize message
+            message = json.loads(message)
+
+            # Check if message has 'type' attribute
+            if not su.hasattr(self, message, 'type'): return
+
+            # Team Authentication
+            if message['type'] == 'auth':
+                tu.processAuthentication(self,message)
+                return
+
+            # Team is trying to send a message without our approval or before logging in.
+            elif team_id is None or not self.factory.teams[team_id].isLoggedIn():
+                tu.writeToTeam(self, mt.PLEASE_LOGIN_MSG)
+                return
+
+            # Team is logged in. We can accept data.
+            else:
+                # Team is sending drone state information, accept it and store it.
+                if message['type'] == 'drone_state':
+                    self.updateDroneState(team_id, message)
+                    tu.writeToTeam(self, mt.THANKS_MSG, verbose=False)
+
+
+                # Team want to log out. Log them out.
+                elif message['type'] == 'logout':
+                    tu.logOutTeam(self.factory, team_id)
+
+                elif message['type'] == 'bid':
+                    self.onReceiveBid(team_id, message)
+
+                elif message['type'] == 'task-response':
+                    # TODO: implement
+                    pass
+        except Exception as e:
+            lu.writeToLog(self.factory, '[ERROR] {}'.format(str(e)), verbose=False)
+            print(traceback.format_exc())
+
+    def updateDroneState(self, team_id, message):
+        # Make sure message has all needed fields.
+        if not su.hasattr(self, message, 'drone_state'): return
+        new_drone_state = message['drone_state']
+        if not su.hasattrs(self, new_drone_state, atts.DRONE_STATE_ATTRS): return
+
+        # Try to insert state into DB. Write back result to team.
+        try:
+            success = self.factory.teams[team_id].upateDroneState(new_drone_state['drone_id'], new_drone_state, datetime.datetime.now())
+            if success:
+                tu.writeToTeam(self, mt.THANKS_MSG, verbose=False)
+        except Exception as e:
+            tu.writeToTeam(self, mt.ERROR_RESPONSE('DB error. Make sure all fields are correct. Error: {}'.format(str(e)))) # Send error
+            print(traceback.format_exc())
+
+    def onReceiveBid(self, team_id, message):
         '''
-        Writes to the team assigned to this protocol, and logs the message.
-        :param dict message
+        Handles bid reception from team. Checks request state, stores it in the database,
+        updates request state. If all teams submit a bid for a request, stops timeout.
+        Calls function to start sending the relevant task.
         '''
-        team_id = self.factory.protocols[self]
-        self.factory.writeToLogToTeam(json.dumps(message), team_id)
-        self.sendString(json.dumps(message).encode())
 
-    def processAuthentication(self, message):
-        '''
-        Run all logic for authenticating and 'logging in' a user.
-        '''
-        team_id, password = message["team-id"], message["password"]
-        if team_id not in self.factory.teams:
-            self.denyTeam('Team {} not found'.format(team_id))
+        # Make sure message if formatted properly.
+        if not su.hasattr(self, message, 'bid'): return
+        bid = message['bid']
+        if not su.hasattrs(self, bid, atts.BID_ATTRS): return
 
-        elif self.factory.teams[team_id].isLoggedIn():
-            self.denyTeam('Team ' + team_id + ' is already logged in.')
-
-        elif not self.factory.teams[team_id].tryLogin(password, self):
-            self.denyTeam('Password error.')
-
-        else:
-            self.factory.protocols[self] = team_id
+        # Get request that corresponds to bid from DB and handle errors.
+        request_id = bid['request_id']
+        try:
             with self.db:
-                self.db.query_list('UPDATE Teams SET is_logged_in = TRUE WHERE team_id = %s;', (team_id, ))
-            self.writeToTeam({
-                'type': 'response',
-                'result': 'success'
-            })
-            # self.auth_t.cancel()
-            with self.db:
-                self.db.query_list('UPDATE Teams SET is_logged_in = TRUE WHERE team_id = %s;', (team_id,))
+                result = self.db.query_one('SELECT * FROM requests WHERE request_id = %s', (request_id,))
+                if result is not None:
+                    request = result
+                else:
+                    raise Exception('[ERROR ON RECEIVING BID] Key error [request_id = {}]'.format(request_id))
 
+            # Case when bid already timed out
+            if request['state'] != 'SENT' and request['state'] != 'ACCEPTED':
+                raise Exception("[ERROR ON RECEIVING BID] Already timeout [TEAM# {1}, REQ# {0}]".format(team_id, request_id))
+
+
+            # Try to put into DB and update request_states
+            with self.db:
+                bid_exists = self.db.count('Bids', 'request_id = %s AND team_id = %s', (request_id, team_id))
+                if bid_exists:
+                    raise Exception('[ERROR ON RECEIVING BID] Bid already exists [TEAM# {1}, REQ# {0}]'.format(request_id, team_id))
+                else:
+                    bid_accepted = True if bid['accepted'] else False
+                    self.db.insert_values('Bids',
+                                          (DBHandler.DEFAULT, bid['price'], bid['seconds_expected'], bid['drone_id'], bid_accepted, False, team_id, request_id))  # TODO: make sure default works.
+
+                # count number of bids
+                n_bids = self.db.count('Bids', 'request_id = %s', (request_id,))
+                result = self.db.query_one('SELECT sent_to FROM Requests WHERE request_id = %s', (request_id,))
+                if result is not None:
+                    n_sent = result[0]
+                else:
+                    raise Exception('[ERROR ON RECEIVING BID] [TEAM# {1}, REQ# {0}]')
+            tu.writeToTeam(self, mt.THANKS_MSG, verbose=False)
+
+
+            # Check if all teams submitted bids to stop timeout and send results.
+            if n_bids == n_sent:
+                with self.db:
+                    self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s; ',
+                                      ('ALL_ACCEPTED', request_id))
+                lu.writeToLog(self.factory,"Received ALL bids for REQ# {}, timeout callback canceled.".format(request_id))
+                self.factory.requestCallIds[request_id].cancel()
+                self.factory.sendBidResults(request_id)
+            else:
+                with self.db:
+                    self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;',
+                                      ('ACCEPTED', request_id))
+
+        except Exception as e:
+                lu.writeToLog(self.factory, str(e))
+                tu.writeToTeam(self, mt.ERROR_RESPONSE('Bidding error. Error: {}'.format(str(e))))
+                print(traceback.format_exc())
 
 class MainFactory(ServerFactory):
 
@@ -152,265 +193,189 @@ class MainFactory(ServerFactory):
         Initializes variables:
             numProtocols: number of open protocols
             protocols: maps { protocol: team_id }
-            teams: maps { team: Team object }
+            teams: maps { team_id: Team object }
             passwords: maps { team_id : password }
+            requestCallIds = { request_id : requestCallId }
         '''
-        self.db = DBHandler(DB_NAME, DB_USER, DB_PASSWORD)
+        self.db = DBHandler(k.DB_NAME, k.DB_USER, k.DB_PASSWORD)
         self.numProtocols = 0
         self.protocols = {}
-        self.requestCallId = {}
+        self.requestCallIds = {}
         self._loadTeams()
 
     def _loadTeams(self):
+        '''
+        Load team info from DB and initialize team objects.
+        '''
         with self.db:
             teams = self.db.query_list('SELECT * FROM Teams;')
-            self.db.query_list('UPDATE Teams SET is_logged_in = FALSE;')  # reset all login states
-        self.teams = {team['team_id']: Team(team['team_id'], team['password']) for team in teams}
+            self.db.query_list('UPDATE Teams SET is_logged_in = FALSE;')  # reset all login states to logged out.
+        self.teams = {team['team_id']: Team(team['team_id'], team['password'], self.db) for team in teams}
 
     # ---------------TWISTED FACTORY METHODS----------------------------------#
 
     # This will be used by the default buildProtocol to create new protocols:
     protocol = TeamServerSideProtocol
 
-    # Called when factory is initialized (put code other than variable initiation here)
     def startFactory(self):
         '''
         Called when factory starts running. Sets isRunning to true for logging. Opens files.
         '''
+        print('[SERVER] Factory started. Waiting for connections.')
         self.isRunning = True
         self.log = open(LOG_NAME, 'a')
-        self.log.write('Starting new log: ' + str(datetime.now()) + '\n')
+        self.log.write('\nStarting new log: ' + str(datetime.datetime.now()) + '\n')
+        self.startNextBroadcastTimer()
 
-    # Factory shutdown
     def stopFactory(self):
         '''
         Called when factory is shutting down. Set isRunning to false so we can log without errors, and closes opened files.
         '''
         self.isRunning = False
-        self.log.write('\n')
+        self.log.write('Stopping factory. \n')
         self.log.close()
-
-    # ---------------LOGGING METHODS-------------------------------------------#
-
-    def writeToLog(self, message):
-        '''
-        Prints message to output and writes message to log.
-        '''
-        if self.isRunning:
-            print('[SERVER] ' + message)
-            self.log.write('[SERVER]' + message + '\n')
-
-    def writeToLogFromTeam(self, message, team_id):
-        '''
-        Prints to output and writes to log a message that we received from Team team_id
-        '''
-        if self.isRunning:
-            if team_id is None:
-                print('[UNKNOWN TEAM] ' + message)
-                self.log.write('[UNKNOWN TEAM]' + message + '\n')
-            else:
-                print('[TEAM ' + team_id + '] ' + message)
-                self.log.write('[TEAM ' + team_id + '] ' + message + '\n')
-
-    def writeToLogToTeam(self, message, team_id):
-        '''
-        HELPER FUNCTION FOR COMMUNICATION: DON'T USE OTHERWISE
-        Prints message that we server sends to Team team_id, and also writes that to the log.
-        '''
-        if self.isRunning:
-            if team_id is None:
-                print('[SERVER TO UNKNOWN TEAM] ' + message)
-                self.log.write('[SERVER TO UNKNOWN TEAM]' + message + '\n')
-            else:
-                print('[SERVER TO TEAM ' + team_id + '] ' + message)
-                self.log.write('[SERVER TO TEAM ' + team_id + '] ' + message + '\n')
 
     # -------------------------------------------------------------------------#
 
-    def logOutTeam(self, protocol, team_id):
-        if team_id is not None:
-            self.teams[team_id].logOut()
+    def startNextBroadcastTimer(self):
+        try:
+            # Retrieve request.
+            request = su.getNextRequest(self, self.db)
+
+            if request is None:
+                lu.writeToLog(self, 'No WAITING requests left.')
+                return
+
+            # Start timer (by use of callback)
+            time_til_broadcast = (request['time_requested'] - datetime.datetime.now()).seconds
+            lu.writeToLog(self, 'Time until next broadcast: {}'.format(time_til_broadcast))
+            reactor.callLater(time_til_broadcast, self.broadcastNextRequest, (request))
+
+        except Exception as e:
+            lu.writeToLog(self, '[ERROR] Failed at broadcastTimer. Error: {}'.format(str(e)))
+            print(traceback.format_exc())
+
+    def broadcastNextRequest(self, request):
+        '''
+        Query request from DB and set a timer to broadcast the given request at the
+        time specified in the request.
+        '''
+        try:
+            # Create request message for broadcast.
+            request_msg = mt.REQUEST_MSG(request)
+
+            # Send to all teams that are logged in and set timeout.
+            lu.writeToLog(self, 'Brodcasting REQ# {} to Teams: {}'.format(request['request_id'], ','.join([self.protocols[protocol] for protocol in self.protocols])))
+            for protocol in self.protocols:
+                tu.writeToTeam(protocol, request_msg, verbose=False)
+
+            callId = reactor.callLater(REQUEST_TIMEOUT, self.bidTimeOut, request['request_id'])
+            self.requestCallIds[request['request_id']] = callId
+
+            # Update request state to sent.
             with self.db:
-                self.db.query_list('UPDATE Teams SET is_logged_in = FALSE WHERE team_id = %s;', (team_id,))
-            self.writeToLog('Team ' + team_id + ' logged out.')
+                self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;',
+                                  ('SENT', request['request_id']))
+                sent_to = len(self.protocols)
+                self.db.query_one('UPDATE Requests SET sent_to = %s WHERE request_id = %s;',
+                                  (sent_to, request['request_id']))
 
-    def sendTask(self, team_id, request_id):
-        with self.db:
-            request = self.db.query_one('SELECT * FROM requests WHERE request_id = %s', (request_id))
-        if request is None:
-            self.writeToLog('[ERROR] Not exist [REQ# {}]'.format(request_id))
-            return
+            self.startNextBroadcastTimer()
 
-        task_generated = {
-            'type': 'task',
-            'request_id': request['request_id'],
-            'k_passengers': request['k_passengers'],
-            'time_requested': request['time_requested'],
-            'time_expected': request['time_expected'],
-            'price_expected': request['price_expected'],
-            'from_port': request['from_port'],
-            'to_port': request['to_port'],
-        }
-
-        for protocol in self.factory.protocols:
-            if self.factory.protocols[protocol] == team_id:
-                protocol.writeToTeam(task_generated)
-
-    def broadcastRequest(self, request_id):
-        with self.db:
-            request = self.db.query_one('SELECT * FROM requests WHERE request_id = %s', (request_id))
-        if request is None:
-            self.writeToLog('[ERROR] Not exist [REQ# {}]'.format(request_id))
-            return
-
-        request_generated = {
-            'type': 'request',
-            'request': {
-                'request_id': request['request_id'],
-                'k_passengers': request['k_passengers'],
-                'time_requested': request['time_requested'],
-                'time_expected': request['time_expected'],
-                'price_expected': request['price_expected'],
-                'from_port': request['from_port'],
-                'to_port': request['to_port'],
-            }
-        }
-
-        # team connected
-        for protocol in self.factory.protocols:
-            protocol.writeToTeam(request_generated)
-        callId = reactor.callLater(REQUEST_TIMEOUT, self.bidTimeOut, (request['request_id'],))
-        self.requestCallId[request['request_id']] = callId
-        with self.db:
-            self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;',
-                              ('REQUEST_SENT', request['request_id']))
+        except Exception as e:
+            lu.writeToLog(self, '[ERROR] Failed broadcast requests. Error: {}'.format(str(e)))
+            print(traceback.format_exc())
 
     def bidTimeOut(self, request_id):
-        self.writeToLog("[BID TIMEOUT] [request_id = {}]".format(request_id))
-        with self.db:
-            self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;', ('BID_COMPLETED', request_id))
-        self.collectBid(request_id)
+        '''
+        Call when bid request times out.
+        '''
+        # TODO: update to NOT_ACCEPTED if request state = SENT
+        try:
+            lu.writeToLog(self, "[BID TIMEOUT] [REQ# {}]".format(request_id))
+            with self.db:
+                # Check if someone accepted. If not, update state.
+                result = self.db.query_one('SELECT state FROM Requests WHERE request_id = %s', (request_id,))
+                if result is not None:
+                    state = result[0]
+                else:
+                    raise Exception('Failed to query request state.')
+                if state == 'SENT':
+                    self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;', ('NOT_ACCEPTED', request_id))
+                    lu.writeToLog(self, '[Request NOT_ACCEPTED] [REQ# {}]'.format(request_id))
+                    return
 
-    def selectBestBid(self, request_id, bids):
-        # dummy function now
+            # If bid was accepted, collect bids.
+            self.sendBidResults(request_id)
+        except Exception as e:
+            lu.writeToLog(self, '[ERROR] On bid timeout. Error: {}'.format(str(e)))
+            print(traceback.format_exc())
+
+    def selectBestBid(self, bids):
+        # dummy function now TODO implement once we know how to calculate the best bid.
         return bids[0]
 
-    def collectBid(self, request_id):
-        # collect bids
-        # finds the best bid
-        with self.db:
-            bids_accepted = self.db.query_list('SELECT * FROM Bids WHERE request_id = %s AND accepted = TRUE;',
-                                               (request_id,))
+    def sendBidResults(self, request_id):
+        '''
+        Collects bids for REQ# request_id and figures out what is the best bid.
+        Then we proceed to send the best bid to the given drone/team.
+        If this function is called it means at least one bid was submitted.
+        '''
+        try:
+            # Get bids bid and request from DB.
+            with self.db:
+                bids_accepted = self.db.query_list('SELECT * FROM Bids WHERE request_id = %s AND accepted = TRUE;',
+                                                   (request_id,))
+                if bids_accepted is None or len(bids_accepted) == 0:
+                    raise('Failure collecting bids.')
 
-            if len(bids_accepted) == 0:
-                # no bids accepted
-                self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;',
-                                  ('BID_COMPLETED_FAIL', request_id))
-                self.writeToLog('[REQUEST FAILED] No accepted bids for [REQ# {}]'.format(request_id))
-            else:
-                # there exist some bids
-                best_bid = self.selectBestBid(request_id, bids_accepted)
-                self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;'
-                                  'UPDATE Bids SET succeeded = %s WHERE bid_id = %s;',
-                                  ('BID_COMPLETED_SUCCESS', request_id, True, best_bid['bid_id']))
+                request = self.db.query_one('SELECT * FROM Requests WHERE request_id = %s',(request_id,))
+                if request is None:
+                    raise('Failure collecting bids.')
 
-                self.writeToLog('[REQUEST SUCCEEDED] Accept bids [BID# {}, TEAM# {}, REQ# {}]'
-                                .format(best_bid['bid_id'], best_bid['team_id'], request_id))
-                self.sendTask(best_bid['team_id'], request_id)
+            # Send result to winning bid
+            best_bid = self.selectBestBid(bids_accepted)
+            bid_winning_team = best_bid['team_id']
+            now = datetime.datetime.now()
+            time_expected = now + datetime.timedelta(seconds=best_bid['seconds_expected'])
+            with self.db:
+                self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;', ('ASSIGNED', request_id))
+                self.db.query_one('UPDATE Requests SET time_assigned = %s WHERE request_id = %s;', (now, request_id))
+                self.db.query_one('UPDATE Requests SET time_expected = %s WHERE request_id = %s;', (time_expected, request_id))
+            tu.writeToTeam(self.teams[bid_winning_team].protocol, mt.WINNING_BID_RESULT(request, best_bid, str(time_expected)))
+
+            # Send result to losing teams
+            bid_losing_teams = [bid['team_id'] for bid in bids_accepted if bid['team_id'] != bid_winning_team]
+            for blt in bid_losing_teams:
+                protocol = self.teams[blt].protocol
+                if protocol is not None:
+                    tu.writeToTeam(self.teams[blt].protocol, mt.LOSING_BID_RESULT(request))
+
+        except Exception as e:
+            lu.writeToLog(self, '[ERROR] On sendBidResults. Error: {}'.format(str(e)))
+            print(traceback.format_exc())
+
 
     # ---------------------------------------------------------------
 
-    def onReceiveDroneState(self, team_id, drone_states, timestamp = datetime.now()):
-        drone_ids = [state['drone_id'] for state in drone_states]
-        if len(set(drone_ids)) != len(drone_ids):
-            self.writeToLog("[ERROR DUPLICATED DRONES] [TEAM# {}]".format(team_id))
-            return
-
-        for state in drone_states:
-            state_kv = [
-                ('team_id', team_id),
-                ('drone_id', state['drone_id']),
-                ('time_stamp', timestamp),
-                ('battery_left', state['battery_left']),
-                ('k_passengers', state['k_passengers']),
-                ('latitude', state['latitude']),
-                ('longitude', state['longitude']),
-                ('altitude', state['altitude']),
-                ('velocity', state['velocity']),
-                ('from_port', state['from_port']),
-                ('to_port', state['to_port']),
-                ('fulfilling', state['fulfilling']),
-            ]
-            keys, values = zip(*state_kv)
-            with self.db:
-                try:
-                    record_id = self.db.insert_values('Drone_States_History', values, keys)['record_id']
-                except:
-                    self.writeToLog('[ERROR WRITING DRONE_STATES] [TEAM# {} DRONE# {}]'.format(team_id, state['drone_id']))
-                    return
-
-                self.db.query_one('UPDATE drone_states SET record_id = %s WHERE (team_id, drone_id) = (%s, %s);',
-                                  (record_id, team_id, state['drone_id']))
-
-
-    def onRecieveTaskResponse(self, task_response):
+    def onReceiveTaskResponse(self, task_response):
         request_id = task_response['request_id']
         team_id = task_response['team_id']
 
-    def onReceiveBid(self, bid):
-        # check the request state
-        # store bid in database
-        # if all bids for a request are received, collect bid at once
-        request_id = bid['request_id']
-        team_id = bid['team_id']
-        try:
-            with self.db:
-                request = self.db.query_list('SELECT * FROM requests WHERE request_id = %s', (request_id,))[0]
-        except:
-            self.writeToLog("[ERROR ON RECEIVING BID] Key error [request_id = {}]".format(request_id))
-            return
+    def onReceiveTaskUpdate(self, task_update):
+        # TODO: implement.
+        pass
 
-        if request['state'] == 'INIT':
-            # already time out
-            # TODO: send error message
-            self.writeToLog("[ERROR ON RECEIVING BID] Already timeout [TEAM# {}, REQ# {}]" \
-                            .format(team_id, request_id))
-            return
-        if request['state'] == 'REQUEST_SENT' or request['state'] == 'BID_RECEIVED':
-            with self.db:
-                # store bid into database
-                is_exists = self.db.count('Bids', 'request_id = %s AND team_id = %s', (request_id, team_id))
-                if is_exists:
-                    # TODO: send error message
-                    self.writeToLog('[ERROR ON RECEIVING BID] Bid already exists [TEAM# {1}, REQ# {0}]'
-                                    .format(request_id, team_id))
-                    return
-                else:
-                    bid_accepted = True if bid['accepted'] else False
-                    self.db.insert_values('Bids',
-                                          (DBHandler.DEFAULT, bid['price'], bid_accepted, False, team_id, request_id))
-
-                # count number of bids
-                n_bids = self.db.count('Bids', 'request_id = %s', (request_id,))
-                if n_bids == self.numProtocols:
-                    self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s; ',
-                                      ('BID_COMPLETED', request_id))
-                    self.writeToLog("[RECEIVING ALL BIDS] for [REQ# {}]".format(request_id))
-                    self.requestCallId[request_id].cancel()
-                    self.writeToLog("[TIMEOUT CALLBACK CANCELLED] for [REQ# {}]".format(request_id))
-
-                    self.collectBid(request_id)  # process all bids
-                else:
-                    self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;',
-                                      ('BID_RECEIVED', request_id))
 
 
 # 8007 is the port you want to run under. Choose something >1024
 def main():
+    # TODO: Only create new demand and load requests if we are starting. If it crashes DONT reset.
+    DemandGenerator(start_delay=10).generate_file(filename='./demand/demand.csv') # Generate demand file using current time # TODO: check why this is not working
+
     endpoint = TCP4ServerEndpoint(reactor, 8007)
     endpoint.listen(MainFactory())
     reactor.run()
-
 
 if __name__ == '__main__':
     main()

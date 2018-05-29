@@ -2,18 +2,17 @@ import csv
 import random
 import datetime
 
-# from .. import allVars as av
-
 class DemandGenerator():
 
-    def __init__(self):
+    def __init__(self, start_delay=15):
         # self.max_passengers = av.MAX_PASSENGERS  TODO: Figure out how to import allVars, or work around it to get MAX_PASSENGERS
         self.max_passengers = 4
         # self.ports = [i for i in range(av.NUM_PORTS)]
         self.ports = [i for i in range(5)]  # TODO: same here
+        self.start_delay = start_delay
         self.start_datetime = self._get_start_datetime()
 
-    def generate_file(self, filename='demand.csv', k_rows=20, interval=10):
+    def generate_file(self, filename='demand.csv', k_rows=20, interval=20):
         '''
         Generate a csv file for the demand.
         Filename: must end in .csv
@@ -22,7 +21,7 @@ class DemandGenerator():
         '''
         # TODO: add randomness to interval times.
         with open(filename, 'w') as csvfile:
-            fieldnames = ['datetime', 'from_port', 'to_port', 'pax']
+            fieldnames = ['datetime', 'from_port', 'to_port', 'k_passengers', 'expected_price']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
@@ -32,7 +31,8 @@ class DemandGenerator():
                     'datetime': self.start_datetime + datetime.timedelta(seconds=i*interval),
                     'from_port': ports[0],
                     'to_port': ports[1],
-                    'pax': self._get_pax()
+                    'k_passengers': self._get_pax(),
+                    'expected_price': self._get_expected_price()
                 }
                 writer.writerow(row)
 
@@ -43,9 +43,14 @@ class DemandGenerator():
         return(random.sample(self.ports, 2))
 
     def _get_start_datetime(self):
-        today = datetime.datetime.today()
-        start_datetime = datetime.datetime(today.year, today.month, today.day, hour=15, minute=0, second=0)
+        #today = datetime.datetime.today()
+        #start_datetime = datetime.datetime(today.year, today.month, today.day, hour=15, minute=0, second=0)
+        start_datetime = datetime.datetime.now() + datetime.timedelta(seconds=self.start_delay)
         return start_datetime
+
+    def _get_expected_price(self):
+        # TODO: implement with actual prices.
+        return 100
 
 def main():
     dg = DemandGenerator()

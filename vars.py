@@ -1,4 +1,6 @@
-
+NUM_TEAMS = 4
+NUM_DRONES = 1
+REQUEST_TIMEOUT = 10
 LOG_NAME = 'log.txt'
 LOGIN_TIMEOUT = 15  # in seconds
 

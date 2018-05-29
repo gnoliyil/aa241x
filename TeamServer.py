@@ -1,22 +1,16 @@
 from twisted.internet import reactor, defer
 from twisted.protocols.basic import LineReceiver, NetstringReceiver
 from twisted.internet.protocol import Protocol, ReconnectingClientFactory, ProcessProtocol
-from sys import stdout
-import threading
-from allVars import *
-from clientVars import *
-import utils
-import datetime
-import json
+import team_vars as tv
+import threading, datetime, json, sys
 
-from stateSimulator import Simulator  # TODO: delete when we stop using simulator.
+from Simulator import Simulator  # TODO: delete when we stop using simulator.
 
 
 class TeamClientSideProtocol(NetstringReceiver):
 
     def __init__(self):
-        self.clientState = 'INIT'
-        self.droneStates = []  # TODO: This is just a placeholder list for simulation purposes. This assumes there is only one drone per team right now.
+        self.droneStates = [[] for _ in range(tv.NUM_DRONES)]
 
     #---------------TWISTED PROTOCOL METHODS----------------------------------#
 
@@ -25,29 +19,33 @@ class TeamClientSideProtocol(NetstringReceiver):
         Called when we receive a line/message from the main server.
         '''
         message = json.loads(line.decode())
-        print('[SERVER] ', message)
+        print('[FROM SERVER] ', message)
+        print()
+
+        # TODO: Check that message containts the relevant fields.
 
         if message['type'] == 'response':
             if self.clientState == 'LOGGING-IN':
                 if message['result'] == 'success':
                     self.clientState = 'LOGGED-IN'
-                    self.startSimulation()
-                    self.sendDroneState()
-                else:
-                    self.connectionLost()
+                    self.addToDroneStates()
+                    for drone_id in range(tv.NUM_DRONES):
+                        self.sendDroneState(drone_id)
+
+        elif message['type'] == 'request':
+            request = message['request']
+            self.decideBid(request)
 
 
     def connectionMade(self):
         '''
-        Called when a connection with the main server has been established.
+        Called when a connection with the main server has been established. Tries to log in to the server.
         '''
         print('Connection with SERVER established.')
-        # TODO: change to config file later
-        team_id, password = CLIENT_USERNAME, CLIENT_PASSWORD
         self.writeToServer({
             'type': 'auth',
-            'team-id': team_id,
-            'password': password
+            'team_id': self.factory.team_id,
+            'password': self.factory.password
         })
         self.clientState = 'LOGGING-IN'
 
@@ -60,51 +58,113 @@ class TeamClientSideProtocol(NetstringReceiver):
         print('[TO SERVER] ', message)
         self.sendString(json.dumps(message).encode())
 
-    #-------------------------------------------------------------------------#
+    #------------------------OUR METHODS-------------------------------------#
 
     def startSimulation(self):
         '''
         Current drone SKD simulator call, which will add state data to our queue from a different
         thread.
         '''
-        for drone_id in range(NUM_DRONES):
-            simulator = Simulator(self.droneStates, drone_id)
-            t = threading.Thread(target=simulator.run, args=(self.factory.run_event, ))
+        for drone_id in range(tv.NUM_DRONES):
+            simulator = Simulator(self.droneStates[drone_id], drone_id)
+            t = threading.Thread(target=simulator.run, args=(self.factory.run_event,))
             t.start()
             self.factory.threads.append(t)
 
-
-    def sendDroneState(self):
+    def sendDroneState(self, drone_id):
         '''
         Important method. Send drone state to main server every DRONE_UPDATE_INTERVAL seconds.
         We call reactor reactor.callLater() to recall the method on the set interval.
         '''
-        if self.droneStates:
-            lastState = self.droneStates[-1]
-            drone_id = '0' # TODO; 0 is just a placeholder
+        if self.droneStates[drone_id]:
+            lastState = self.droneStates[drone_id][-1]
             self.writeToServer({
-                'type': 'drone-state',
-                'timestamp': datetime.datetime.now().timestamp(),
-                'states': [{
-                    'drone_id': 0,
-                    'type'    : lastState['type'],
+                'type': 'drone_state',
+                'drone_state': {
+                    'drone_id': lastState['drone_id'],
                     'longitude': lastState['longitude'],
                     'latitude': lastState['latitude'],
                     'altitude': lastState['altitude'],
                     'velocity': lastState['velocity'],
-                    'pax'     : lastState['pax'],
-                    'drone-state': lastState['drone-state']
-                }]
+                    'k_passengers': lastState['k_passengers'],
+                    'battery_left': lastState['battery_left'],
+                    'state': lastState['state'],
+                    'fulfilling': lastState['fulfilling'],
+                    'next_port': lastState['next_port']
+                }
             })
-            self.droneStates.clear()
-        reactor.callLater(DRONE_UPDATE_INTERVAL, self.sendDroneState)
+            self.droneStates[drone_id].clear()
+        reactor.callLater(tv.DRONE_UPDATE_INTERVAL, self.sendDroneState, drone_id)
+
+    #------------------------METHOD TO IMPLEMENT-------------------------------#
+
+    def decideBid(self, request):
+        '''
+        Important method. Decides if we want to submit a bid to the given request.
+        '''
+        request_id = request['request_id']
+        k_passengers = request['k_passengers']
+        price_expected = request['expected_price']
+        from_port = request['from_port']
+        to_port = request['to_port']
+        #######################TODO FOR TEAM###################################
+        # 1) Implement this function with your own algorithm for deciding how
+        # much to bid. This should take into account price and ETA,
+        # and k_passengers. We currently
+        # use our own dummy function that bids the expected_price.
+        ######################################################################
+        wantToBid = True  # TODO: decide if you want to bid.
+        if wantToBid:
+            drone_id = 0            # TODO: decide what drone to use
+            seconds_expected = 120     # TODO: Calculate expected time of trip, in seconds.
+            price = price_expected  # TODO: decide your price.
+        ######################################################################
+        if wantToBid:
+            message = { 'type': 'bid',
+              'bid': {
+                 'request_id': request_id,
+                 'accepted': True,
+                 'drone_id': drone_id,
+                 'seconds_expected': seconds_expected,
+                 'price': price
+              }
+            }
+        else:
+            message = { 'type': 'bid',
+              'bid': {
+                 'request_id': request_id,
+                 'accepted': False,
+                 'drone_id': None,
+                 'seconds_expected': None,
+                 'price': None
+              }
+            }
+        self.writeToServer(message)
+
+
+    def addToDroneStates(self):
+        #######################TODO FOR TEAM###################################
+        # 2) Implement a function that has the same functionality as
+        # startSimulation/Simulator, but with real drone data. You need to append
+        # drone state data from every drone drone_id to self.droneStates[drone_id],
+        # like we do in the Simulator. Please use that as a reference. Our
+        # sendDroneState function takes care of sending the data to the
+        # MainServer.
+        #
+        # Once you start writing this you can comment out all the simulation
+        # code, but make sure you have it as a reference.
+        ######################################################################
+        # self.startSimulation() # TODO uncomment to see simulation functionality
+        pass
+        ######################################################################
+
 
 
 
 # Need factory so we can reconnect. Factory maintains should mantain persistent state.
 class TeamFactory(ReconnectingClientFactory):
 
-    def __init__(self):
+    def __init__(self, team_id, password):
         '''
         Initialize variables:
             threads: list of all threads that we start, so we can kill them if need be
@@ -112,6 +172,8 @@ class TeamFactory(ReconnectingClientFactory):
         '''
         self.threads = []
         self.run_event = threading.Event()
+        self.team_id = team_id
+        self.password = password
 
     #---------------TWISTED FACTORY METHODS----------------------------------#
 
@@ -124,14 +186,12 @@ class TeamFactory(ReconnectingClientFactory):
         '''
         print('Trying to connect.')
 
-
     def clientConnectionLost(self, connector, reason):
         '''
         Called when a client (in this case there is only one) loses connection to the server.
         '''
         print('Lost connection.  Reason:', reason)
         ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
-
 
     def clientConnectionFailed(self, connector, reason):
         '''
@@ -160,9 +220,14 @@ def main():
     '''
     Main function: Connect to server and run the reactor. Standard for Twisted.
     '''
+    if len(sys.argv) != 3:
+        print('Syntax: {} <team_id> <password>'.format(sys.argv[0]))
+        sys.exit(0)
+
+    (team_id, password) = sys.argv[1:]
     host = 'localhost'
     port = 8007
-    reactor.connectTCP(host, port, TeamFactory())
+    reactor.connectTCP(host, port, TeamFactory(team_id, password))
     reactor.run()
 
 if __name__ == '__main__':
