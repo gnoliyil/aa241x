@@ -12,10 +12,7 @@
 <h2 id="mainserver---teamserver-communication">MainServer &lt;-&gt; TeamServer Communication</h2>
 <p>The<code>MainServer</code> is connected with the <code>TeamServers</code> using the <code>Twisted</code> protocol. To start communication, the admins will first launch the MainServer and be open for communication. IP address and Port number will be provided to the teams. To initiate communication teams should simply run their <code>TeamServer.py</code> program, which has everything set up for communication. Make sure to run <code>TeamServer.py &lt;team_id&gt; &lt;password&gt;</code>  to be able to login. Also make sure to install all the requirements in <code>requirements.txt</code> using <code>pip install -r requirements.txt</code> and use python3.</p>
 <p>Teams should make sure that they have all the logic implemented once they run their server. To send a json message to the server, call <code>self.sendToServer(&lt;json_string&gt;)</code>, which is in the <code>TeamClientSideProtocol</code> class. When teams send messages to MainServer, they must include a <code>'type'</code> field. The types will be defined below.</p>
-<p>The files that teams MUST finish are described below. Simply search and complete  all the TODOs:</p>
-<p>‘’’’’’’’’’</p>
-<h1 id="fill-this-up">FILL THIS UP!!!</h1>
-<p>‘’’’’’’’’’’</p>
+<p><strong>Teams MUST get the <a href="http://TeamServer.py">TeamServer.py</a> and other relevant files from us to be able and complete all the TODOs listed. Please ask us questions if there is any confusion.</strong></p>
 <p>The communication should follow the structure below:</p>
 <h3 id="authentication">1. Authentication:</h3>
 <p>Team sends message to Main to be authenticated by the system. If a team does not do this, any message they send will be ignored.</p>
@@ -93,13 +90,13 @@
 }
 </code></pre>
 <blockquote>
-<p>Task Update: The team must send an update of the task once its done or if something happens. Send ‘confirm’ to confirm that you will perform the task that we sent.</p>
+<p>Task Update: The team must send an update of the task once its done or if something happens. Send ‘confirm’ to confirm that you will perform the task that we sent. Send ‘deny’ if you will not perform the task . ‘pickup’ when you pick up a passengers. ‘success’ if you deliver the passenger, and ‘failure’ if you fail to deliver the passengers. When you send a ‘pickup’ or ‘success’ message, make sure that you have sent the state of the drone at hand very recently (before sending the message), since we will check your location and make sure that the location of the from_port/to_port is close in distance from your drones last reported location.</p>
 </blockquote>
 <pre><code># TeamServer -&gt; MainServer
 {
   'type': 'task_update'
   'request_id': (int)
-  'status': (text)         # 'confirm', 'pickup', 'success' or 'failure'    
+  'status': (text)         # 'confirm','deny', 'pickup', 'success' or 'failure'    
   'msg': (option)          # Describes what happened if there is a failure. None if success. 
 }
 </code></pre>
@@ -134,4 +131,51 @@
 }
 </code></pre>
 <h2 id="teamserver---android-app---drone-communication">TeamServer &lt;-&gt; Android App &lt;-&gt; Drone Communication</h2>
+<p>Running / Compiling:</p>
+<ol>
+<li>
+<p>To download the app onto an Android device, you will first need to download Android Studio (from here: <a href="https://developer.android.com/studio/">https://developer.android.com/studio/</a>). Then, open Android Studio and select “Open an existing Android Studio project”, opening the ENTIRE DroneController folder.</p>
+</li>
+<li>
+<p>Enable USB debugging on your Android device. This can be done in the settings. Plug your device into your laptop via USB and run the application from Android studio (using the green play button). Default settings should be fine, but if not, then use build tool “28.0.0 rc1” with SDK 26 to compile this app. The app should be able run on any device with SDK version ≥ 19 (i.e. ≥ Android 4.4).</p>
+</li>
+</ol>
+<p>IMPORTANT: When you open the app for the first time, you must be connected to the internet. The app will need to download necessary tools used for connecting with the drone. Only after you see the “SDK Registration Succeeded” message may you connect to the drone’s WiFi network.</p>
+<ol start="3">
+<li>Now we’re ready to test the communication. We are using python3 for this code (python2 will give you weird error messages!). On your laptop, install the packages python-socketio, eventlet, and flask. You can do this with the command</li>
+</ol>
+<p>pip install package_name</p>
+<p>where package_name is the name of the desired package.</p>
+<ol start="4">
+<li>
+<p>Run the attached <a href="http://socketio-server.py">socketio-server.py</a> program in your terminal.</p>
+</li>
+<li>
+<p>In your terminal, run the command</p>
+</li>
+</ol>
+<p>ABS_PATH/platform-tools/adb reverse tcp:9001 tcp:9090</p>
+<p>where ABS_PATH is the absolute path to the folder containing your SDK Tools. adb is a command line utility provided in the Android SDK tools that allows for port forwarding. You can find the correct location of the SDK folder by going to Tools --&gt; SDK Manager in Android Studio. For example, the command that I run is</p>
+<p>/Users/andrewchang/Library/Android/sdk/platform-tools/adb</p>
+<p>Otherwise, you can download the standalone SDK tools here: <a href="https://developer.android.com/studio/releases/platform-tools">https://developer.android.com/studio/releases/platform-tools</a></p>
+<p>Make sure that the second port number is consistent with that which you used in the socketio-server program!</p>
+<p>IMPORTANT: THIS MUST BE DONE EVERY TIME YOU RECONNECT YOUR DEVICE TO YOUR LAPTOP!</p>
+<ol start="6">
+<li>
+<p>In the app, make sure “<a href="http://127.0.0.1:9001">http://127.0.0.1:9001</a>” is in the URL input box and click “connect”. You should be able to see “connect xxxxxx (a long hexadecimal id)” in the python output and see an Android Toast saying “Connect!”</p>
+</li>
+<li>
+<p>To connect with the Spark, connect with the drone’s WiFi network and click the “Open” button in the home page of the app. In the new page, click “Get Drone State.” You will be able to see the updated drone state in your python terminal. In the Android Studio log, you will able to see the commands sent from the laptop to the Android app.</p>
+</li>
+<li>
+<p>The implementation of the controls is left up to the individual groups. To start, look at the FlyTask in DroneControlActivity.</p>
+</li>
+</ol>
+<p>Extra Information:</p>
+<p>Network Connection:<br>
+The Android app uses <a href="http://Socket.io">Socket.io</a> (somewhat like a WebSocket client/server) to send “events” with associated JSON data for communication.</p>
+<p>Get Drone State:<br>
+After connecting to the <a href="http://Socket.io">Socket.io</a> server and connecting with the drone, you can click “Get Drone State” to poll drone state every second (you can change the frequency yourself in DroneControlActivity.java). The drone state (in JSON Format) will be shown on the screen and will be sent to the <a href="http://Socket.io">Socket.io</a> server, after which the server may respond to the state information.</p>
+<p>Control Drone:<br>
+After the drone takes off and we finish all the drone configuration, we would like to set the target position (longitude, latitude and altitude) and velocity (vx, vy, vz) and then click “Fly to” to let it fly to a specific position. The current code has some basic code, which should be completed by students. [PENDING UPDATES: ADDITIONAL CODE MAY BE PROVIDED]</p>
 
