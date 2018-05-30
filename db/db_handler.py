@@ -86,7 +86,6 @@ class DBHandler:
             self.con.rollback()
             raise Exception(e)
 
-    # TODO update to return False on error like query_one
     def query_list(self, query, args=()):
         """Executes a query and returns the output as a list."""
         try:

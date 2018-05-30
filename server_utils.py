@@ -1,6 +1,7 @@
 import team_utils as tu
 import datetime
 import log_utils as lu
+import message_templates as mt
 
 def hasattrs(protocol, message, attrs):
     for attr in attrs:
@@ -13,11 +14,7 @@ def hasattr(protocol, message, attr):
     Check if message has attribute. If not, then we write to team which attribute they are missing. If the team is unknown, we lose the connection.
     '''
     if attr not in message:
-        tu.writeToTeam(protocol, {
-            'type': 'response',
-            'result': 'error',
-            'msg': 'Missing attribute: {}'.format(attr)
-        })
+        tu.writeToTeam(protocol, ERROR_RESPONSE('Missing attribute: {}'.format(attr)))
         if protocol.factory.protocols[protocol] is None:
             protocol.transport.loseConnection()
         return False

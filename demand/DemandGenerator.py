@@ -5,10 +5,8 @@ import datetime
 class DemandGenerator():
 
     def __init__(self, start_delay=15):
-        # self.max_passengers = av.MAX_PASSENGERS  TODO: Figure out how to import allVars, or work around it to get MAX_PASSENGERS
         self.max_passengers = 4
-        # self.ports = [i for i in range(av.NUM_PORTS)]
-        self.ports = [i for i in range(5)]  # TODO: same here
+        self.ports = [i for i in range(5)]  # TODO: DECIDE HOW MANY PORTS
         self.start_delay = start_delay
         self.start_datetime = self._get_start_datetime()
 
@@ -19,7 +17,6 @@ class DemandGenerator():
         k_rows: number of rows in outputfile, where each row represents one request.
         interval: time interval between requests, in seconds
         '''
-        # TODO: add randomness to interval times.
         with open(filename, 'w') as csvfile:
             fieldnames = ['datetime', 'from_port', 'to_port', 'k_passengers', 'expected_price']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
