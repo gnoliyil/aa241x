@@ -41,7 +41,7 @@ class Drone():
                                 state['fulfilling'],state['next_port']))
 
 
-    # TODO: test this function
+    # TODO: Make sure this function is working
     def getMostRecentState(self):
         '''
         Retrieves most recent state of drone from database.

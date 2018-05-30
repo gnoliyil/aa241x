@@ -3,8 +3,6 @@ from psycopg2 import sql
 import keys as k
 import csv
 
-# TODO: chaneg from query_one to insert_values...
-
 def _loadPorts(handler):
     '''
     Loads port info into DB.

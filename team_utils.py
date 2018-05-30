@@ -1,5 +1,6 @@
 import json
 import log_utils as lu
+import server_utils as su
 
 
 def logOutTeam(factory, team_id):
@@ -35,7 +36,7 @@ def processAuthentication(protocol, message):
     '''
     Run all logic for authenticating and 'logging in' a user.
     '''
-    # TODO: use hasattrs to confirm message format is correct
+    if not su.hasattrs(protocol, message, ['team_id', 'password']): return
     team_id, password = message["team_id"], message["password"]
 
     # Unsuccessful authentication

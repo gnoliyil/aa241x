@@ -60,6 +60,7 @@ CREATE TABLE Requests(
   expected_price FLOAT,      -- Average price for bid of this type.
   price_f_slope FLOAT,
   state VARCHAR(255) REFERENCES Request_States(state), -- See options in Request_States
+	status VARCHAR(255), -- Request status once it has been assigned: confirm, pickup, success, failure
   from_port INTEGER REFERENCES Ports(port_id),  -- Pickup Port
   to_port INTEGER REFERENCES Ports(port_id),    -- Delivery Port
   CONSTRAINT k_passengers_check CHECK (k_passengers >= 0 AND k_passengers <= 4)

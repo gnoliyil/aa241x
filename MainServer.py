@@ -12,17 +12,14 @@ import log_utils as lu
 import message_templates as mt
 import attributes as atts
 import server_utils as su
-from demand import DemandGenerator
 import keys as k
 
 
 # TODO in order:
-# Finish bid broadcasting logic, add all requests to DB. Then use timestamps to set timers to send out bids. Make sure it works!
-# Split logs per team. only print relevant stuff.
 # Incorporate drone COMMUNICATION
 # Make sure we can setup connection with other computer.
 # Consider sendind FAILED requests again after all WAITING ones have been sent.
-# TODO: check if when a team submits a bid, their drone is not being considered for another bid.
+# check if when a team submits a bid, their drone is not being considered for another bid.
 
 class TeamServerSideProtocol(NetstringReceiver):
 
@@ -66,7 +63,7 @@ class TeamServerSideProtocol(NetstringReceiver):
             team_id = self.factory.protocols[self]
             message = line.decode()
 
-            lu.writeToLogFromTeam(self.factory, message, team_id, verbose=True)  # TODO: Have a separate log for each team.
+            lu.writeToLogFromTeam(self.factory, message, team_id, verbose=True)
 
             # deserialize message
             message = json.loads(message)
@@ -99,9 +96,9 @@ class TeamServerSideProtocol(NetstringReceiver):
                 elif message['type'] == 'bid':
                     self.onReceiveBid(team_id, message)
 
-                elif message['type'] == 'task-response':
-                    # TODO: implement
-                    pass
+                elif message['type'] == 'task_update':
+                    self.factory.onReceiveTaskUpdate(message)
+
         except Exception as e:
             lu.writeToLog(self.factory, '[ERROR] {}'.format(str(e)), verbose=False)
             print(traceback.format_exc())
@@ -156,7 +153,7 @@ class TeamServerSideProtocol(NetstringReceiver):
                 else:
                     bid_accepted = True if bid['accepted'] else False
                     self.db.insert_values('Bids',
-                                          (DBHandler.DEFAULT, bid['price'], bid['seconds_expected'], bid['drone_id'], bid_accepted, False, team_id, request_id))  # TODO: make sure default works.
+                                          (DBHandler.DEFAULT, bid['price'], bid['seconds_expected'], bid['drone_id'], bid_accepted, False, team_id, request_id))
 
                 # count number of bids
                 n_bids = self.db.count('Bids', 'request_id = %s', (request_id,))
@@ -185,6 +182,31 @@ class TeamServerSideProtocol(NetstringReceiver):
                 lu.writeToLog(self.factory, str(e))
                 tu.writeToTeam(self, mt.ERROR_RESPONSE('Bidding error. Error: {}'.format(str(e))))
                 print(traceback.format_exc())
+
+    def onReceiveTaskUpdate(self, message):
+        if not su.hasattrs(self, message, atts.TASK_UPDATE_ATTS): return
+        status = message['status']
+        if status not in attts.POSSIBLE_TASK_STATUSES:
+            tu.writeToTeam(self, mt.ERROR_RESPONSE('Invalid status.'))
+        else:
+            tu.writeToTeam(self, mt.THANKS_MSG)
+
+        with self.factory.db:
+            self.factory.db.query_list('UPDATE Requests SET status = %;', (status.upper()))
+
+        if status == 'deny':
+            with self.factory.db:
+                self.factory.db.query_list('UPDATE Requests SET status = %;', (FAILED))
+
+        if status == 'pickup':
+            # TODO: Make sure that it is true that the team's drone is close to the pickup port.
+            pass
+
+        if status == 'success':
+            # TODO: Make sure that it is true that the team's drone is close to the pickup port.
+            pass
+
+
 
 class MainFactory(ServerFactory):
 
@@ -235,7 +257,7 @@ class MainFactory(ServerFactory):
         self.log.write('Stopping factory. \n')
         self.log.close()
 
-    # -------------------------------------------------------------------------#
+    # ----------------REQUEST BROADCASTING------------------------------------#
 
     def startNextBroadcastTimer(self):
         try:
@@ -290,7 +312,6 @@ class MainFactory(ServerFactory):
         '''
         Call when bid request times out.
         '''
-        # TODO: update to NOT_ACCEPTED if request state = SENT
         try:
             lu.writeToLog(self, "[BID TIMEOUT] [REQ# {}]".format(request_id))
             with self.db:
@@ -310,6 +331,8 @@ class MainFactory(ServerFactory):
         except Exception as e:
             lu.writeToLog(self, '[ERROR] On bid timeout. Error: {}'.format(str(e)))
             print(traceback.format_exc())
+
+    # ----------------BID HANDLING--------------------------------------------#
 
     def selectBestBid(self, bids):
         # dummy function now TODO implement once we know how to calculate the best bid.
@@ -356,23 +379,8 @@ class MainFactory(ServerFactory):
             print(traceback.format_exc())
 
 
-    # ---------------------------------------------------------------
-
-    def onReceiveTaskResponse(self, task_response):
-        request_id = task_response['request_id']
-        team_id = task_response['team_id']
-
-    def onReceiveTaskUpdate(self, task_update):
-        # TODO: implement.
-        pass
-
-
-
 # 8007 is the port you want to run under. Choose something >1024
 def main():
-    # TODO: Only create new demand and load requests if we are starting. If it crashes DONT reset.
-    DemandGenerator(start_delay=10).generate_file(filename='./demand/demand.csv') # Generate demand file using current time # TODO: check why this is not working
-
     endpoint = TCP4ServerEndpoint(reactor, 8007)
     endpoint.listen(MainFactory())
     reactor.run()

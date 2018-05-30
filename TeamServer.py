@@ -22,8 +22,6 @@ class TeamClientSideProtocol(NetstringReceiver):
         print('[FROM SERVER] ', message)
         print()
 
-        # TODO: Check that message containts the relevant fields.
-
         if message['type'] == 'response':
             if self.clientState == 'LOGGING-IN':
                 if message['result'] == 'success':
@@ -35,6 +33,20 @@ class TeamClientSideProtocol(NetstringReceiver):
         elif message['type'] == 'request':
             request = message['request']
             self.decideBid(request)
+
+        elif message['type'] == 'bid_result':
+            if 'result' == 'win':
+                task = message['task']
+                request_id = message['request_id']
+                status = 'confirm' if self.confirmTask(task) else 'deny'
+                self.writeToServer({
+                  'type': 'task_update',
+                  'request_id': request_id,
+                  'status': 'status',
+                  'msg': None
+                })
+            else:
+                self.handleBidDenied()
 
 
     def connectionMade(self):
@@ -158,6 +170,31 @@ class TeamClientSideProtocol(NetstringReceiver):
         pass
         ######################################################################
 
+    def confirmTask():
+        '''
+        Return True if we will try to fulfill the given task and False if we will not.
+        '''
+        #######################TODO FOR TEAM###################################
+        # Implement this function with your own decision making. You must decide
+        # if you will attempt at fulfilling the task. The team will be penalized
+        # if you do not, since you submitted a bid. Fill 'confirm' with
+        # True or False based on your drone status and any other factor.
+        ######################################################################
+        confirm = True # TODO you decide the actual value for this.
+        ######################################################################
+        return confirm
+
+    def handleBidDenied():
+        '''
+        This function is called when you submitted a bid but you lost it.
+        '''
+        #######################TODO FOR TEAM###################################
+        # Implement this function. You probably want to upodate your drone information.
+        # For example, if you submitted a bid with drone_id 0, that drone was unable to
+        # submit any other bids until now. You need to keep track of that.
+        ######################################################################
+        pass
+        ######################################################################
 
 
 

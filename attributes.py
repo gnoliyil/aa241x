@@ -18,3 +18,11 @@ BID_ATTRS = [
     'seconds_expected',
     'price',
 ]
+
+TASK_UPDATE_ATTS = [
+  'request_id',
+  'status',         # 'confirm', 'pickup', 'success' or 'failure'
+  'msg'
+]
+
+POSSIBLE_TASK_STATUSES = {'confirm', 'deny', 'pickup', 'success','failure'}
