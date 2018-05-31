@@ -29,7 +29,7 @@ class Simulator():
 
             # NOTE: Use a similar function for when you are using real drones. Simply append the states to
             # the queue, and team server will handle the communication.
-            self.droneStates.append({
+            self.droneStates = {
                 'drone_id': self.drone_id,
                 'type'    : 'physical',
                 'longitude': x,
@@ -41,7 +41,7 @@ class Simulator():
                 'state': 'working',
                 'fulfilling': None,
                 'next_port': None
-            })
+            }
             x += 1
             y += 2
             z += 3

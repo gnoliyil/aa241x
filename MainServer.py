@@ -21,6 +21,8 @@ import keys as k
 # Consider sendind FAILED requests again after all WAITING ones have been sent.
 # check if when a team submits a bid, their drone is not being considered for another bid.
 
+
+
 class TeamServerSideProtocol(NetstringReceiver):
 
     # -----------------TWISTED PROTOCOL METHODS--------------------------------#
@@ -134,16 +136,13 @@ class TeamServerSideProtocol(NetstringReceiver):
         request_id = bid['request_id']
         try:
             with self.db:
-                result = self.db.query_one('SELECT * FROM requests WHERE request_id = %s', (request_id,))
-                if result is not None:
-                    request = result
-                else:
+                request = self.db.query_one('SELECT * FROM requests WHERE request_id = %s', (request_id,))
+                if request is None:
                     raise Exception('[ERROR ON RECEIVING BID] Key error [request_id = {}]'.format(request_id))
 
             # Case when bid already timed out
             if request['state'] != 'SENT' and request['state'] != 'ACCEPTED':
                 raise Exception("[ERROR ON RECEIVING BID] Already timeout [TEAM# {1}, REQ# {0}]".format(team_id, request_id))
-
 
             # Try to put into DB and update request_states
             with self.db:
@@ -158,12 +157,10 @@ class TeamServerSideProtocol(NetstringReceiver):
                 # count number of bids
                 n_bids = self.db.count('Bids', 'request_id = %s', (request_id,))
                 result = self.db.query_one('SELECT sent_to FROM Requests WHERE request_id = %s', (request_id,))
-                if result is not None:
-                    n_sent = result[0]
-                else:
+                if result is None:
                     raise Exception('[ERROR ON RECEIVING BID] [TEAM# {1}, REQ# {0}]')
+                n_sent = result[0]
             tu.writeToTeam(self, mt.THANKS_MSG, verbose=False)
-
 
             # Check if all teams submitted bids to stop timeout and send results.
             if n_bids == n_sent:
@@ -186,25 +183,64 @@ class TeamServerSideProtocol(NetstringReceiver):
     def onReceiveTaskUpdate(self, message):
         if not su.hasattrs(self, message, atts.TASK_UPDATE_ATTS): return
         status = message['status']
-        if status not in attts.POSSIBLE_TASK_STATUSES:
+        request_id = message['request_id']
+        if status not in atts.POSSIBLE_TASK_STATUSES:
             tu.writeToTeam(self, mt.ERROR_RESPONSE('Invalid status.'))
         else:
             tu.writeToTeam(self, mt.THANKS_MSG)
 
-        with self.factory.db:
-            self.factory.db.query_list('UPDATE Requests SET status = %;', (status.upper()))
 
         if status == 'deny':
             with self.factory.db:
-                self.factory.db.query_list('UPDATE Requests SET status = %;', (FAILED))
+                self.factory.db.query_list('UPDATE Requests SET status = %s WHERE request_id = %s;',
+                                           ('FAILED', request_id))
+
+        if status == 'confirm':
+            with self.factory.db:
+                self.factory.db.query_one('UPDATE Requests SET status = %s, state = %s WHERE request_id = %s;',
+                                          ('CONFIRM', 'ASSIGNED', request_id))
 
         if status == 'pickup':
             # TODO: Make sure that it is true that the team's drone is close to the pickup port.
-            pass
+            # STEP: (1) get the drone id, pickup port for this request
+            #       (2) get the drone state from database
+            #       (3) check if the drone is close to the pickup port
+            with self.factory.db:
+                drone_state = self.factory.db.query_one('SELECT * FROM drone_states_history WHERE fulfilling = %s;', (request_id))
+                request = self.factory.db.query_one('SELECT * FROM requests WHERE request_id = %s;', (request_id))
+
+                port = self.factory.db.query_one('SELECT * FROM ports WHERE port_id = %s', (request['from_port'], ))
+
+                port_position = (port['longitude'], port['latitude'], port['altitude'])
+                drone_position = (drone_state['longitude'], drone_state['latitude'], drone_state['altitude'])
+
+                if tu.closeEnough(port_position, drone_position):
+                    self.factory.db.query_one('UPDATE Requests SET status = %s WHERE request_id = %s;',
+                                              ('PICKUP', request_id))
+                else:
+                    lu.writeToLog(self.factory, "ERROR: PICKUP POSITION ERROR FOR REQUEST %s" % (request_id, ))
 
         if status == 'success':
-            # TODO: Make sure that it is true that the team's drone is close to the pickup port.
-            pass
+            # TODO: Make sure that it is true that the team's drone is close to the to-port.
+            # STEP: (1) get the drone id, arrival port for this request
+            #       (2) get the drone state from database
+            #       (3) check if the drone is close to the arrival port
+            with self.factory.db:
+                drone_state = self.factory.db.query_one('SELECT * FROM drone_states_history WHERE fulfilling = %s;', (request_id))
+                request = self.factory.db.query_one('SELECT * FROM requests WHERE request_id = %s;', (request_id))
+
+                port = self.factory.db.query_one('SELECT * FROM ports WHERE port_id = %s', (request['to_port'], ))
+
+                port_position = (port['longitude'], port['latitude'], port['altitude'])
+                drone_position = (drone_state['longitude'], drone_state['latitude'], drone_state['altitude'])
+
+                if tu.closeEnough(port_position, drone_position):
+                    self.factory.db.query_one('UPDATE Requests SET state = %s, status = %s WHERE request_id = %s;',
+                                              ('DONE', 'SUCCESS', request_id))
+                    # TODO: send success message to team, so team can reset their drone states and get the money.
+                else:
+                    lu.writeToLog(self.factory, "ERROR: LANDING POSITION ERROR FOR REQUEST %s" % (request_id, ))
+
 
 
 

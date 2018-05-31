@@ -29,6 +29,26 @@ def REQUEST_MSG(request):
         }
     }
 
+def TASK_MSG(task):
+    return {
+        'type': 'task',
+        'task': {
+            'request_id': task['request_id'],
+            'k_passengers': task['k_passengers'],
+            'expected_price': task['expected_price'],
+            'from_port': task['from_port'],
+            'to_port': task['to_port'],
+        }
+    }
+
+def TASK_UPDATE_MSG(request_id, status, msg):
+    return {
+        'type': 'task_update',
+        'request_id': request_id,
+        'status': status,
+        'msg': msg
+    }
+
 def WINNING_BID_RESULT(request, bid, time_expected):
     return {
         'type': 'bid_result',
