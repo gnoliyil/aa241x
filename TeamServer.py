@@ -247,7 +247,7 @@ class TeamClientSideProtocol(NetstringReceiver):
                 to_port = self.ports[task['to_port']]
 
                 self.sioServer.send_waypoint(drone_id, {
-                    'point': {
+                    'destination': {
                         'longitude': from_port['longitude'],
                         'latitude': from_port['latitude'],
                         'altitude': from_port['altitude'],
@@ -256,7 +256,7 @@ class TeamClientSideProtocol(NetstringReceiver):
                 })
 
                 self.sioServer.send_waypoint(drone_id, {
-                    'point': {
+                    'destination': {
                         'longitude': to_port['longitude'],
                         'latitude': to_port['latitude'],
                         'altitude': to_port['altitude'],
