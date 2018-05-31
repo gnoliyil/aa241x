@@ -20,6 +20,7 @@ import keys as k
 # Make sure we can setup connection with other computer.
 # Consider sendind FAILED requests again after all WAITING ones have been sent.
 # check if when a team submits a bid, their drone is not being considered for another bid.
+# TODO: Deny bids that are trying to fulfilled a drone that has already been assigned or has bidded for another request. 
 
 class TeamServerSideProtocol(NetstringReceiver):
 

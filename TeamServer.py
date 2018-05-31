@@ -170,7 +170,7 @@ class TeamClientSideProtocol(NetstringReceiver):
         pass
         ######################################################################
 
-    def confirmTask():
+    def confirmTask(self):
         '''
         Return True if we will try to fulfill the given task and False if we will not.
         '''
@@ -184,7 +184,7 @@ class TeamClientSideProtocol(NetstringReceiver):
         ######################################################################
         return confirm
 
-    def handleBidDenied():
+    def handleBidDenied(self):
         '''
         This function is called when you submitted a bid but you lost it.
         '''
