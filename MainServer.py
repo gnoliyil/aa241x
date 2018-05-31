@@ -20,7 +20,7 @@ import keys as k
 # Make sure we can setup connection with other computer.
 # Consider sendind FAILED requests again after all WAITING ones have been sent.
 # check if when a team submits a bid, their drone is not being considered for another bid.
-# TODO: Deny bids that are trying to fulfilled a drone that has already been assigned or has bidded for another request. 
+# TODO: Deny bids that are trying to fulfilled a drone that has already been assigned or has bidded for another request.
 
 class TeamServerSideProtocol(NetstringReceiver):
 
@@ -144,6 +144,8 @@ class TeamServerSideProtocol(NetstringReceiver):
             # Case when bid already timed out
             if request['state'] != 'SENT' and request['state'] != 'ACCEPTED':
                 raise Exception("[ERROR ON RECEIVING BID] Already timeout [TEAM# {1}, REQ# {0}]".format(team_id, request_id))
+
+            # TODO: dont let same drone have more than one bid at the same time.
 
 
             # Try to put into DB and update request_states
@@ -366,6 +368,7 @@ class MainFactory(ServerFactory):
                 self.db.query_one('UPDATE Requests SET state = %s WHERE request_id = %s;', ('ASSIGNED', request_id))
                 self.db.query_one('UPDATE Requests SET time_assigned = %s WHERE request_id = %s;', (now, request_id))
                 self.db.query_one('UPDATE Requests SET time_expected = %s WHERE request_id = %s;', (time_expected, request_id))
+                self.db.query_one('UPDATE Bids SET won = %s WHERE request_id = %s AND team_id = %s;', (True, request_id, bid_winning_team))
             tu.writeToTeam(self.teams[bid_winning_team].protocol, mt.WINNING_BID_RESULT(request, best_bid, str(time_expected)))
 
             # Send result to losing teams

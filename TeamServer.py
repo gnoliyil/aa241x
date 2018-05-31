@@ -166,7 +166,7 @@ class TeamClientSideProtocol(NetstringReceiver):
         # Once you start writing this you can comment out all the simulation
         # code, but make sure you have it as a reference.
         ######################################################################
-        # self.startSimulation() # TODO uncomment to see simulation functionality
+        self.startSimulation() # TODO uncomment to see simulation functionality
         pass
         ######################################################################
 
