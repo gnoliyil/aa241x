@@ -4,30 +4,31 @@ import eventlet
 from twisted.internet import reactor, defer
 from twisted.protocols.basic import LineReceiver, NetstringReceiver
 from twisted.internet.protocol import Protocol, ReconnectingClientFactory, ProcessProtocol
-import team_vars as tv
 import team_utils as tu
-import message_templates as mt
 import threading, datetime, json, sys
 from SioServer import SioServer
 
 from Simulator import Simulator  # TODO: delete when we stop using simulator.
 
+DRONE_UPDATE_INTERVAL = 10  # Waiting time in seconds to send new drone info.
+NUM_DRONES = 1
+
 
 class DroneStates:
     def __init__(self):
         initial_state = {
-            'drone_id': 0,
-            'latitude': 0,
-            'longitude': 0,
-            'altitude': 0,
+            'drone_id': None,
+            'latitude': None,
+            'longitude': None,
+            'altitude': None,
             'velocity': [0, 0, 0],
-            'battery_left': 0,
-            'k_passengers': 0,
+            'battery_left': None,
+            'k_passengers': None,
             'state': '',
-            'fulfilling': 0,
-            'next_port': 0
+            'fulfilling': None,
+            'next_port': None
         }
-        self.states = [initial_state.copy() for _ in range(tv.NUM_DRONES)]
+        self.states = [initial_state.copy() for _ in range(NUM_DRONES)]
 
     def __getitem__(self, item):
         return self.states[item]
@@ -35,22 +36,13 @@ class DroneStates:
     def __setitem__(self, key, value):
         self.states[key] = value
 
-class Profit:
-    def __init__(self):
-        self.profit = 0
-
-    def add(self, val):
-        self.profit += val
-
-    def get(self):
-        return self.profit
 
 class TeamClientSideProtocol(NetstringReceiver):
 
-    def __init__(self, droneStates, sioServer, profit):
+    def __init__(self, droneStates, sioServer):
         self.droneStates = droneStates
         self.sioServer = sioServer
-        self.myProfit = profit
+        # TODO: Add more variables if needed
 
     #---------------TWISTED PROTOCOL METHODS----------------------------------#
 
@@ -67,7 +59,7 @@ class TeamClientSideProtocol(NetstringReceiver):
                 if message['result'] == 'success':
                     self.clientState = 'LOGGED-IN'
                     self.addToDroneStates()
-                    for drone_id in range(tv.NUM_DRONES):
+                    for drone_id in range(NUM_DRONES):
                         self.sendDroneState(drone_id)
 
         elif message['type'] == 'request':
@@ -78,23 +70,16 @@ class TeamClientSideProtocol(NetstringReceiver):
             if 'result' == 'win':
                 task = message['task']
                 request_id = message['request_id']
-                status = 'confirm' if self.confirmTask(task) else 'deny'
-                # TODO: what to do here?
-                drone_id = self.selectDroneForTask(task)
+                status = 'confirm' if self.confirmTask(task, request_id) else 'deny'
                 self.writeToServer({
                   'type': 'task_update',
                   'request_id': request_id,
                   'status': status,
-                  'msg': drone_id
+                  'msg': None
                 })
             else:
                 request_id = message['request_id']
                 self.handleBidDenied(request_id)
-
-        elif message['type'] == 'success':
-            # TODO
-            task = message['task']
-            self.handleSuccess(task)
 
 
     def connectionMade(self):
@@ -123,13 +108,20 @@ class TeamClientSideProtocol(NetstringReceiver):
     def startSimulation(self):
         '''
         Current drone SKD simulator call, which will add state data to our queue from a different
-        thread.
+        thread. This is for admin testing purposes.
         '''
-        for drone_id in range(tv.NUM_DRONES):
+        for drone_id in range(NUM_DRONES):
             simulator = Simulator(self.droneStates[drone_id], drone_id)
             t = threading.Thread(target=simulator.run, args=(self.factory.run_event,))
             t.start()
             self.factory.threads.append(t)
+
+    def addToDroneStates(self):
+        '''
+        This is for admins testing purposes.
+        '''
+        # self.startSimulation()
+        pass
 
     def sendDroneState(self, drone_id):
         '''
@@ -154,7 +146,7 @@ class TeamClientSideProtocol(NetstringReceiver):
                 }
             })
             self.droneStates[drone_id].clear()
-        reactor.callLater(tv.DRONE_UPDATE_INTERVAL, self.sendDroneState, drone_id)
+        reactor.callLater(DRONE_UPDATE_INTERVAL, self.sendDroneState, drone_id)
 
     #------------------------METHOD TO IMPLEMENT-------------------------------#
 
@@ -175,7 +167,7 @@ class TeamClientSideProtocol(NetstringReceiver):
         ######################################################################
         wantToBid = True  # TODO: decide if you want to bid.
         if wantToBid:
-            drone_id = 0            # TODO: decide what drone to use
+            drone_id = self.selectDroneForBid(request)
             seconds_expected = 120     # TODO: Calculate expected time of trip, in seconds.
             price = price_expected  # TODO: decide your price.
         ######################################################################
@@ -201,23 +193,6 @@ class TeamClientSideProtocol(NetstringReceiver):
             }
         self.writeToServer(message)
 
-
-    def addToDroneStates(self):
-        #######################TODO FOR TEAM###################################
-        # 2) Implement a function that has the same functionality as
-        # startSimulation/Simulator, but with real drone data. You need to set
-        # drone state data from every drone drone_id to self.droneStates[drone_id],
-        # like we do in the Simulator. Please use that as a reference. Our
-        # sendDroneState function takes care of sending the data to the
-        # MainServer.
-        #
-        # Once you start writing this you can comment out all the simulation
-        # code, but make sure you have it as a reference.
-        ######################################################################
-        self.startSimulation() # TODO uncomment to see simulation functionality
-        pass
-        ######################################################################
-
     def confirmTask(self, task):
         '''
         Return True if we will try to fulfill the given task and False if we will not.
@@ -229,9 +204,12 @@ class TeamClientSideProtocol(NetstringReceiver):
         # True or False based on your drone status and any other factor.
         ######################################################################
         confirm = True # TODO you decide the actual value for this.
+        ######################################################################
 
+        # If you confirm, now we create a task thread to command and keep track of the drone.
         if confirm:
-            drone_id = self.selectDroneForTask(task)  # choose the drone
+            drone_id = task['drone_id']  # choose the drone
+            self.droneStates[drone_id]['fulfilling'] = request_id
             def TaskThread():
                 # step 1: send (from_port) and (to_port) as Command to SioServer
                 # step 2: monitor if we have arrived from port:
@@ -241,8 +219,7 @@ class TeamClientSideProtocol(NetstringReceiver):
                 #             set success
                 #             send success message
                 # sleep between each query
-                request_id = task['request_id']
-                # TODO !!! initialize ports before running the program !!!
+                # TODO for ADMINS!!! initialize ports before running the program !!!
                 from_port = self.ports[task['from_port']]
                 to_port = self.ports[task['to_port']]
 
@@ -273,12 +250,13 @@ class TeamClientSideProtocol(NetstringReceiver):
                     to_position = (to_port['longitude'], to_port['latitude'], to_port['altitude'])
                     if status == 'waiting' and tu.closeEnough(drone_position, from_position):
                         status = 'pickup'
-                        self.writeToServer(mt.TASK_UPDATE_MSG(request_id, status, ''))
+                        self.writeToServer(tu.TASK_UPDATE_MSG(request_id, status, None))
                     elif status == 'pickup' and not tu.closeEnough(drone_position, from_position):
                         status = 'flying'
                     elif status == 'flying' and tu.closeEnough(drone_position, to_position):
                         status = 'success'
-                        self.writeToServer(mt.TASK_UPDATE_MSG(request_id, status, ''))
+                        self.droneStates[drone_id]['fulfilling'] = None # reset the drone state
+                        self.writeToServer(tu.TASK_UPDATE_MSG(request_id, status, None))
                         break
                     time.sleep(1)
 
@@ -294,32 +272,33 @@ class TeamClientSideProtocol(NetstringReceiver):
         #######################TODO FOR TEAM###################################
         # Implement this function. You probably want to upodate your drone information.
         # For example, if you submitted a bid with drone_id 0, that drone was unable to
-        # submit any other bids until now. You need to keep track of that.
+        # submit any other bids until now. You need to keep track of that. Add more
+        # variables to init (like a map of drone to bidsSent).
         ######################################################################
         pass
         ######################################################################
 
-    def selectDroneForTask(self, task):
-        # ###################### FOR TEAMS ###################################
+    def selectDroneForBid(self, request):
+        '''
+        Returns which drone we want to use for the given request.
+        '''
+        k_passengers = request['k_passengers']
+        price_expected = request['expected_price']
+        from_port = request['from_port']
+        to_port = request['to_port']
+        # ###################### TODO FOR TEAMS ##############################
         # Currently since we have only one drone, it is okay to return 0 for
-        # this function.
-        # ###################### FOR TEAMS ###################################
-        return 0
-
-    def handleSuccess(self, task):
-        '''
-        This function is called when you have got a task success message from the main server.
-        '''
-        # TODO
-        for drone_id in range(tv.NUM_DRONES):
-            self.droneStates[drone_id]['fulfilling'] = 0 # reset the drone state
-        pass
+        # this function. If we end up having more than 1, please change this.
+        # ####################################################################
+        drone_id = 0  # TODO: change if needed
+        # ####################################################################
+        return drone_id
 
 
 # Need factory so we can reconnect. Factory maintains should mantain persistent state.
 class TeamFactory(ReconnectingClientFactory):
 
-    def __init__(self, team_id, password, droneStates, sioServer, profit):
+    def __init__(self, team_id, password, droneStates, sioServer):
         '''
         Initialize variables:
             threads: list of all threads that we start, so we can kill them if need be
@@ -332,13 +311,12 @@ class TeamFactory(ReconnectingClientFactory):
 
         self.droneStates = droneStates
         self.sioServer = sioServer
-        self.profit = profit
 
     #---------------TWISTED FACTORY METHODS----------------------------------#
 
     # Standard for Twisted. This is the protocol that the factory will be initializing.
     def buildProtocol(self, addr):
-        p = TeamClientSideProtocol(self.droneStates, self.sioServer, self.profit)
+        p = TeamClientSideProtocol(self.droneStates, self.sioServer)
         p.factory = self
         return p
 
@@ -388,13 +366,12 @@ def main():
 
     droneStates = DroneStates()
     sioServer = SioServer(droneStates)
-    profit = Profit()
 
     def TwisterThread():
         (team_id, password) = sys.argv[1:]
         host = 'localhost'
         port = 8007
-        teamFactory = TeamFactory(team_id, password, droneStates, sioServer, profit)
+        teamFactory = TeamFactory(team_id, password, droneStates, sioServer)
         reactor.connectTCP(host, port, teamFactory)
         reactor.run()
 

@@ -7,7 +7,7 @@ from Team import Team
 from vars import *
 import json, datetime, traceback
 from db import DBHandler
-import team_utils as tu
+import server_team_utils as tu
 import log_utils as lu
 import message_templates as mt
 import attributes as atts

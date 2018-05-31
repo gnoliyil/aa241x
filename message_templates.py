@@ -41,14 +41,6 @@ def TASK_MSG(task):
         }
     }
 
-def TASK_UPDATE_MSG(request_id, status, msg):
-    return {
-        'type': 'task_update',
-        'request_id': request_id,
-        'status': status,
-        'msg': msg
-    }
-
 def WINNING_BID_RESULT(request, bid, time_expected):
     return {
         'type': 'bid_result',
