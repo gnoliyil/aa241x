@@ -56,7 +56,7 @@
 }
 </code></pre>
 <blockquote>
-<p>Bidding: The TeamServers respond back with their bid decision. <strong>IMPORTANT NOTE</strong>: teams must write function that determines if they want to bid, calculate their ETA and the price they want to set. We will set a timeout of 5~10 seconds to let teams respond. After we receive all responses, we decide who wins the bid, and we send back the results to all teams that submitted bids. The API for those results are described in the following section. <strong>PLEASE DO NOT SUBMIT  TWO DIFFERENT BIDS WITH THE SAME DRONE IF YOU HAVE NOT YET RECEIVED THE FIRST BID RESULTS</strong></p>
+<p>Bidding: The TeamServers respond back with their bid decision. <strong>IMPORTANT NOTE</strong>: teams must write function that determines if they want to bid, calculate their ETA and the price they want to set. We will set a timeout of 5~10 seconds to let teams respond. After we receive all responses, we decide who wins the bid, and we send back the results to all teams that submitted bids. The API for those results are described in the following section. <strong>PLEASE DO NOT SUBMIT  TWO DIFFERENT BIDS WITH THE SAME DRONE IF YOU HAVE NOT YET RECEIVED THE FIRST BID RESULTS UNLESS YOU ARE CONFIDENT THAT YOU CAN FULFILL BOTH BIDS</strong></p>
 </blockquote>
 <pre><code># TeamServer -&gt; MainServer
 { 'type': 'bid',
